@@ -1,0 +1,100 @@
+{
+  "name": "Album",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Album/single title"
+    },
+    "artist": {
+      "type": "string",
+      "description": "Artist or band name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "album",
+        "single"
+      ],
+      "default": "album",
+      "description": "Whether this is an album or a single"
+    },
+    "genre": {
+      "type": "string",
+      "enum": [
+        "rock",
+        "pop",
+        "hip_hop",
+        "r_and_b",
+        "jazz",
+        "classical",
+        "electronic",
+        "indie",
+        "metal",
+        "punk",
+        "folk",
+        "country",
+        "latin",
+        "k_pop",
+        "blues",
+        "grunge",
+        "funk",
+        "acg",
+        "cinematic",
+        "other"
+      ],
+      "description": "Music genre"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Sub-genre and style tags (e.g. #alternative rock, #lo-fi, #shoegaze)"
+    },
+    "release_year": {
+      "type": "number",
+      "description": "Year the album/single was released"
+    },
+    "cover_url": {
+      "type": "string",
+      "description": "Album cover image URL"
+    },
+    "mv_url": {
+      "type": "string",
+      "description": "Link to the music video (e.g. YouTube)"
+    },
+    "description": {
+      "type": "string",
+      "description": "Brief description"
+    },
+    "avg_rating": {
+      "type": "number",
+      "description": "Average rating from reviews"
+    },
+    "review_count": {
+      "type": "number",
+      "description": "Number of reviews"
+    },
+    "click_count": {
+      "type": "number",
+      "description": "Number of times this album has been clicked/viewed",
+      "default": 0
+    },
+    "tracklist": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of track titles (auto-fetched from MusicBrainz)"
+    },
+    "musicbrainz_id": {
+      "type": "string",
+      "description": "MusicBrainz release ID for data fetching"
+    }
+  },
+  "required": [
+    "title",
+    "artist"
+  ]
+}

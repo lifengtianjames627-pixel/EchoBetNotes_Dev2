@@ -1,0 +1,97 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user"
+      ],
+      "default": "user"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Member-chosen display name."
+    },
+    "equipped_badges": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Up to 4 equipped badge IDs"
+    },
+    "profile_picture_url": {
+      "type": "string"
+    },
+    "age_group": {
+      "type": "string",
+      "enum": [
+        "under_15",
+        "age_15_plus",
+        "minor",
+        "adult"
+      ],
+      "description": "Current self-declared groups: under_15 (younger than 15), age_15_plus (15 and older). Legacy minor/adult values are not valid for discovery and require a new selection. This is not identity verification or legal adulthood."
+    },
+    "music_preferences": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "biography": {
+      "type": "string"
+    },
+    "location_network_allowed": {
+      "type": "boolean",
+      "default": false
+    },
+    "has_band": {
+      "type": "boolean",
+      "default": false
+    },
+    "band_name": {
+      "type": "string"
+    },
+    "profile_completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "total_browsing_minutes": {
+      "type": "number",
+      "default": 0
+    },
+    "daily_minutes": {
+      "type": "number",
+      "default": 0
+    },
+    "daily_minutes_date": {
+      "type": "string"
+    },
+    "weekly_minutes": {
+      "type": "number",
+      "default": 0
+    },
+    "weekly_minutes_week": {
+      "type": "string"
+    },
+    "monthly_minutes": {
+      "type": "number",
+      "default": 0
+    },
+    "monthly_minutes_month": {
+      "type": "string"
+    },
+    "messages_last_seen": {
+      "type": "object",
+      "description": "Per-peer last-seen map; legacy single timestamps remain supported by the directory."
+    }
+  },
+  "required": [
+    "equipped_badges",
+    "daily_minutes_date",
+    "weekly_minutes_week",
+    "monthly_minutes_month"
+  ]
+}

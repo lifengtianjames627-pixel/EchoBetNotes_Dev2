@@ -1,0 +1,191 @@
+{
+  "name": "RecruitPost",
+  "type": "object",
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user"
+              }
+            },
+            {
+              "data.status": "active"
+            },
+            {
+              "data.moderation_status": {
+                "$in": [
+                  "approved",
+                  "",
+                  null
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "create": {
+      "$and": [
+        {
+          "$or": [
+            {
+              "user_condition": {
+                "role": "user"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.author_email": "{{user.email}}"
+        },
+        {
+          "data.moderation_status": "pending_review"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "band",
+        "musician"
+      ],
+      "default": "band"
+    },
+    "title": {
+      "type": "string"
+    },
+    "band_name": {
+      "type": "string"
+    },
+    "poster_url": {
+      "type": "string",
+      "description": "Legacy public URL. Not used for new uploads or rendered as a public image."
+    },
+    "poster_asset_id": {
+      "type": "string",
+      "description": "Private RecruitPosterAsset reference. Never store a file URI or signed URL on a shared post."
+    },
+    "city": {
+      "type": "string"
+    },
+    "school": {
+      "type": "string"
+    },
+    "looking_for": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "i_play": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "genre_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "influences": {
+      "type": "string"
+    },
+    "commitment": {
+      "type": "string",
+      "enum": [
+        "casual",
+        "regular",
+        "serious"
+      ],
+      "default": "casual"
+    },
+    "description": {
+      "type": "string"
+    },
+    "author_email": {
+      "type": "string"
+    },
+    "author_name": {
+      "type": "string"
+    },
+    "author_age_group": {
+      "type": "string",
+      "enum": [
+        "under_15",
+        "age_15_plus",
+        "minor",
+        "adult"
+      ],
+      "description": "Deprecated historical value. No longer collected, displayed or used for access or discovery."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "closed"
+      ],
+      "default": "active"
+    },
+    "moderation_status": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "pending_review",
+        "blocked"
+      ],
+      "default": "pending_review"
+    },
+    "moderation_reason": {
+      "type": "string"
+    },
+    "report_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "kind",
+    "title",
+    "author_email"
+  ]
+}

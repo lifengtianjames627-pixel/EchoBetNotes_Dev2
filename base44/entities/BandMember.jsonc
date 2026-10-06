@@ -1,0 +1,35 @@
+{
+  "name": "BandMember",
+  "type": "object",
+  "properties": {
+    "band_id": {
+      "type": "string",
+      "description": "ID of the band"
+    },
+    "band_name": {
+      "type": "string",
+      "description": "Name of the band"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the member"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Name of the member"
+    },
+    "role": {
+      "type": "string",
+      "description": "Role in the band (e.g. guitarist, vocalist)"
+    },
+    "is_founder": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this member is the band founder"
+    }
+  },
+  "required": [
+    "band_id",
+    "user_email"
+  ]
+}

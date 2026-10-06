@@ -1,0 +1,22 @@
+{
+  "name": "UserBadge",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the badge owner"
+    },
+    "badge_id": {
+      "type": "string",
+      "description": "Badge identifier"
+    },
+    "earned_at": {
+      "type": "string",
+      "description": "ISO date when badge was earned"
+    }
+  },
+  "required": [
+    "user_email",
+    "badge_id"
+  ]
+}

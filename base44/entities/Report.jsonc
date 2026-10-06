@@ -1,0 +1,92 @@
+{
+  "name": "Report",
+  "type": "object",
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "properties": {
+    "target_type": {
+      "type": "string",
+      "enum": [
+        "recruit_post",
+        "chat_message",
+        "review"
+      ],
+      "description": "What kind of content is being reported"
+    },
+    "target_id": {
+      "type": "string",
+      "description": "ID of the reported content"
+    },
+    "target_summary": {
+      "type": "string",
+      "description": "Snapshot of the reported content for admin review"
+    },
+    "target_author_email": {
+      "type": "string",
+      "description": "Email of the content author"
+    },
+    "reporter_email": {
+      "type": "string"
+    },
+    "reporter_name": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "contact_info",
+        "asking_for_money",
+        "inappropriate",
+        "harassment",
+        "spam",
+        "adult_contacting_minor",
+        "other"
+      ],
+      "description": "Why it was reported"
+    },
+    "details": {
+      "type": "string",
+      "description": "Optional free-text explanation"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "resolved",
+        "dismissed"
+      ],
+      "default": "open"
+    }
+  },
+  "required": [
+    "target_type",
+    "target_id",
+    "reporter_email",
+    "reason"
+  ]
+}

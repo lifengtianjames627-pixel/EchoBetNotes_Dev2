@@ -1,0 +1,97 @@
+{
+  "name": "Subscription",
+  "type": "object",
+  "properties": {
+    "subscriber_email": {
+      "type": "string",
+      "description": "Email of the subscriber"
+    },
+    "subscriber_name": {
+      "type": "string",
+      "description": "Name of the subscriber"
+    },
+    "target_email": {
+      "type": "string",
+      "description": "Email of the reviewer being subscribed to"
+    },
+    "target_name": {
+      "type": "string",
+      "description": "Name of the reviewer being subscribed to"
+    }
+  },
+  "required": [
+    "subscriber_email",
+    "target_email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user"
+              }
+            },
+            {
+              "data.subscriber_email": "{{user.email}}"
+            }
+          ]
+        }
+      ]
+    },
+    "create": {
+      "$and": [
+        {
+          "$or": [
+            {
+              "user_condition": {
+                "role": "user"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        },
+        {
+          "created_by_id": "{{user.id}}",
+          "data.subscriber_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user"
+              }
+            },
+            {
+              "data.subscriber_email": "{{user.email}}"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

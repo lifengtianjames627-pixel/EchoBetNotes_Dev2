@@ -1,0 +1,193 @@
+{
+  "name": "Review",
+  "type": "object",
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.moderation_status": {
+            "$nin": [
+              "pending_review",
+              "blocked"
+            ]
+          }
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": [
+        "album_review",
+        "journey_story",
+        "genre_roundup"
+      ],
+      "default": "album_review",
+      "description": "album_review = a review of one album; journey_story = a personal musical-journey essay; genre_roundup = a curated 'best albums in a genre' list (Bandcamp-Daily style)"
+    },
+    "album_id": {
+      "type": "string",
+      "description": "ID of the album being reviewed (only for kind=album_review)"
+    },
+    "album_title": {
+      "type": "string",
+      "description": "Album title for display"
+    },
+    "album_artist": {
+      "type": "string",
+      "description": "Album artist for display"
+    },
+    "album_cover_url": {
+      "type": "string",
+      "description": "Album cover for display"
+    },
+    "rating": {
+      "type": "number",
+      "description": "Rating from 1 to 5 (only for kind=album_review)"
+    },
+    "title": {
+      "type": "string",
+      "description": "Review or story title"
+    },
+    "content": {
+      "type": "string",
+      "description": "Review text / story body / roundup introduction"
+    },
+    "genre": {
+      "type": "string",
+      "description": "Genre id for journey stories and genre roundups"
+    },
+    "hero_image_url": {
+      "type": "string",
+      "description": "Optional hero/cover image for stories and roundups"
+    },
+    "featured_albums": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "artist": {
+            "type": "string"
+          },
+          "cover_url": {
+            "type": "string"
+          },
+          "blurb": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Curated album picks for a genre roundup, each with a short blurb"
+    },
+    "reviewer_name": {
+      "type": "string",
+      "description": "Name of the reviewer"
+    },
+    "reviewer_email": {
+      "type": "string",
+      "description": "Email of the reviewer"
+    },
+    "reviewer_equipped_badges": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "likes_count": {
+      "type": "number",
+      "default": 0
+    },
+    "dislikes_count": {
+      "type": "number",
+      "default": 0
+    },
+    "band_style": {
+      "type": "string"
+    },
+    "band_background": {
+      "type": "string"
+    },
+    "band_history": {
+      "type": "string"
+    },
+    "band_story": {
+      "type": "string"
+    },
+    "moderation_status": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "pending_review",
+        "blocked"
+      ],
+      "default": "approved"
+    },
+    "moderation_categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "moderation_reason": {
+      "type": "string"
+    },
+    "moderation_confidence": {
+      "type": "number"
+    },
+    "edited_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last author edit, distinct from automatic updates and original publication time"
+    },
+    "edit_times": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "description": "Server timestamps for author edits; no retroactive marks on older records"
+    }
+  },
+  "required": [
+    "content"
+  ]
+}

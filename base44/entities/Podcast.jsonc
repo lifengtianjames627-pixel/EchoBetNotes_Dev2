@@ -1,0 +1,51 @@
+{
+  "name": "Podcast",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Episode title"
+    },
+    "host_name": {
+      "type": "string",
+      "description": "Host or creator name"
+    },
+    "host_email": {
+      "type": "string",
+      "description": "Email of the member who submitted the episode \u2014 makes the host name clickable to open a private chat"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "youth_ears_lab",
+        "sonic_technical_breakdown",
+        "cross_cultural_sound",
+        "live_scene_chronicle",
+        "independent_creator",
+        "behind_the_lyrics"
+      ],
+      "description": "Type of podcast episode"
+    },
+    "description": {
+      "type": "string",
+      "description": "Short episode summary"
+    },
+    "cover_url": {
+      "type": "string",
+      "description": "Episode cover art URL"
+    },
+    "audio_url": {
+      "type": "string",
+      "description": "Link to the audio file/episode"
+    },
+    "duration_minutes": {
+      "type": "number",
+      "description": "Episode length in minutes"
+    }
+  },
+  "required": [
+    "title",
+    "host_name",
+    "category"
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "name": "FriendRequest",
+  "type": "object",
+  "properties": {
+    "from_email": {
+      "type": "string",
+      "description": "Sender email"
+    },
+    "from_name": {
+      "type": "string",
+      "description": "Sender name"
+    },
+    "to_email": {
+      "type": "string",
+      "description": "Recipient email"
+    },
+    "to_name": {
+      "type": "string",
+      "description": "Recipient name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined"
+      ],
+      "default": "pending",
+      "description": "Request status"
+    },
+    "message": {
+      "type": "string",
+      "description": "Optional message with request"
+    }
+  },
+  "required": [
+    "from_email",
+    "to_email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user"
+              }
+            },
+            {
+              "$or": [
+                {
+                  "data.from_email": "{{user.email}}"
+                },
+                {
+                  "data.to_email": "{{user.email}}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

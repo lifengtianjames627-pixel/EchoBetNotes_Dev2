@@ -1,0 +1,64 @@
+{
+  "name": "Band",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Band name"
+    },
+    "genre": {
+      "type": "string",
+      "enum": [
+        "rock",
+        "pop",
+        "hip_hop",
+        "r_and_b",
+        "jazz",
+        "classical",
+        "electronic",
+        "indie",
+        "metal",
+        "punk",
+        "folk",
+        "country",
+        "latin",
+        "k_pop",
+        "other"
+      ],
+      "description": "Band genre"
+    },
+    "description": {
+      "type": "string",
+      "description": "About the band"
+    },
+    "looking_for": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Instruments/roles the band is looking for"
+    },
+    "cover_image_url": {
+      "type": "string",
+      "description": "Band cover photo"
+    },
+    "member_count": {
+      "type": "number",
+      "description": "Number of members"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "recruiting",
+        "active",
+        "inactive"
+      ],
+      "default": "recruiting",
+      "description": "Band status"
+    }
+  },
+  "required": [
+    "name",
+    "genre"
+  ]
+}

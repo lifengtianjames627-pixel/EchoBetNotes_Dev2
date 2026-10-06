@@ -1,0 +1,66 @@
+{
+  "name": "ChatMessage",
+  "type": "object",
+  "rls": {
+    "read": {
+      "data.participants": "{{user.email}}"
+    },
+    "create": {
+      "data.participants": {
+        "$in": [
+          "{{user.email}}"
+        ]
+      }
+    },
+    "update": {
+      "data.sender_email": "{{user.email}}"
+    },
+    "delete": {
+      "data.sender_email": "{{user.email}}"
+    }
+  },
+  "properties": {
+    "chat_id": {
+      "type": "string",
+      "description": "Sorted pair of two emails joined by '|'"
+    },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The two emails in the conversation \u2014 gates read access to participants only (admins cannot read others' messages)"
+    },
+    "sender_email": {
+      "type": "string"
+    },
+    "sender_name": {
+      "type": "string"
+    },
+    "content": {
+      "type": "string"
+    },
+    "attachment_url": {
+      "type": "string",
+      "description": "URL of an attached image or PDF"
+    },
+    "attachment_name": {
+      "type": "string",
+      "description": "Original file name of the attachment"
+    },
+    "attachment_kind": {
+      "type": "string",
+      "enum": [
+        "image",
+        "pdf",
+        "file"
+      ],
+      "description": "How the attachment should be rendered"
+    }
+  },
+  "required": [
+    "chat_id",
+    "sender_email",
+    "content"
+  ]
+}

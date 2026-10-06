@@ -1,0 +1,100 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&display=swap');
+/* Genre skin typefaces — one family per genre mood group (heavy / round /
+   serif / typewriter / soft / geometric). */
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Cormorant+Garamond:wght@600;700&family=Courier+Prime:wght@400;700&family=Nunito:wght@600;800&family=Oswald:wght@500;700&family=Poppins:wght@600;700&family=Space+Grotesk:wght@500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-inter: 'Inter', sans-serif;
+
+    /* Paper editorialism — three-layer depth (blurred ambient → beige bar →
+       cream paper). Warm near-black ink, ochre as the single cross-cultural
+       accent. No neon, no glow, no gradient fills. */
+    --background: 42 35% 93%;
+    --foreground: 36 11% 9%;
+    --card: 42 40% 96%;
+    --card-foreground: 36 11% 9%;
+    --popover: 42 40% 96%;
+    --popover-foreground: 36 11% 9%;
+    --primary: 36 11% 9%;
+    --primary-foreground: 42 40% 96%;
+    --secondary: 41 37% 85%;
+    --secondary-foreground: 36 11% 12%;
+    --muted: 41 30% 88%;
+    --muted-foreground: 35 10% 38%;
+    --accent: 30 57% 48%;
+    --accent-foreground: 42 40% 96%;
+    --destructive: 0 55% 48%;
+    --destructive-foreground: 42 40% 96%;
+    --border: 40 26% 84%;
+    --input: 40 26% 84%;
+    --ring: 30 57% 48%;
+    --chart-1: 30 57% 48%;
+    --chart-2: 95 14% 40%;
+    --chart-3: 224 22% 46%;
+    --chart-4: 41 37% 55%;
+    --chart-5: 36 11% 30%;
+    --radius: 0.5rem;
+
+    --sidebar-background: 42 35% 93%;
+    --sidebar-foreground: 36 11% 12%;
+    --sidebar-primary: 30 57% 48%;
+    --sidebar-primary-foreground: 42 40% 96%;
+    --sidebar-accent: 41 37% 85%;
+    --sidebar-accent-foreground: 36 11% 12%;
+    --sidebar-border: 40 26% 82%;
+    --sidebar-ring: 30 57% 48%;
+  }
+
+  .dark {
+    --background: 42 35% 93%;
+    --foreground: 36 11% 9%;
+    --card: 42 40% 96%;
+    --card-foreground: 36 11% 9%;
+    --popover: 42 40% 96%;
+    --popover-foreground: 36 11% 9%;
+    --primary: 36 11% 9%;
+    --primary-foreground: 42 40% 96%;
+    --secondary: 41 37% 85%;
+    --secondary-foreground: 36 11% 12%;
+    --muted: 41 30% 88%;
+    --muted-foreground: 35 10% 38%;
+    --accent: 30 57% 48%;
+    --accent-foreground: 42 40% 96%;
+    --destructive: 0 55% 48%;
+    --destructive-foreground: 42 40% 96%;
+    --border: 40 26% 84%;
+    --input: 40 26% 84%;
+    --ring: 30 57% 48%;
+    --sidebar-background: 42 35% 93%;
+    --sidebar-foreground: 36 11% 12%;
+    --sidebar-primary: 30 57% 48%;
+    --sidebar-primary-foreground: 42 40% 96%;
+    --sidebar-accent: 41 37% 85%;
+    --sidebar-accent-foreground: 36 11% 12%;
+    --sidebar-border: 40 26% 82%;
+    --sidebar-ring: 30 57% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-inter);
+  }
+  /* Touch responsiveness — removes the iOS 300ms tap delay and stops
+     double-tap zoom from swallowing quick taps on interactive elements.
+     -webkit-tap-highlight-color kills the grey flash on tap. */
+  button, a, [role="button"], input, select, textarea, label, summary {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+}

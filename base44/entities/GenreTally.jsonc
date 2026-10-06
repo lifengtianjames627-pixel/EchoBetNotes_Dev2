@@ -1,0 +1,45 @@
+{
+  "name": "GenreTally",
+  "type": "object",
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the listener whose taste this tracks"
+    },
+    "genre": {
+      "type": "string",
+      "description": "Genre id matching the Album.genre enum"
+    },
+    "count": {
+      "type": "number",
+      "default": 0,
+      "description": "How many times this listener opened content in this genre"
+    }
+  },
+  "required": [
+    "user_email",
+    "genre"
+  ]
+}

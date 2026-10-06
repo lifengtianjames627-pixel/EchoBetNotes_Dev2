@@ -1,0 +1,47 @@
+{
+  "name": "DailyStat",
+  "type": "object",
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "properties": {
+    "date": {
+      "type": "string",
+      "description": "Calendar day in YYYY-MM-DD form \u2014 one record per day"
+    },
+    "visitors": {
+      "type": "number",
+      "default": 0,
+      "description": "Unique visitor count for this day"
+    },
+    "visitor_keys": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Dedup keys seen today (user id for logged-in, hashed IP for guests) \u2014 bounded to the last 5000"
+    }
+  },
+  "required": [
+    "date"
+  ]
+}

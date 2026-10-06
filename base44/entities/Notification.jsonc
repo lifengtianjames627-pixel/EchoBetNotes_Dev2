@@ -1,0 +1,70 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the recipient \u2014 who the notification is for"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "like",
+        "follow",
+        "friend_request",
+        "badge",
+        "ranking",
+        "system"
+      ],
+      "description": "What kind of system notification this is"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short headline"
+    },
+    "body": {
+      "type": "string",
+      "description": "Optional supporting detail"
+    },
+    "link": {
+      "type": "string",
+      "description": "Optional in-app route to open when tapped"
+    },
+    "actor_name": {
+      "type": "string",
+      "description": "Display name of the member who triggered it (empty for system)"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the recipient has seen it"
+    }
+  },
+  "required": [
+    "owner_email",
+    "type",
+    "title"
+  ]
+}

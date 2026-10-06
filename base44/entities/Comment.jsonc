@@ -1,0 +1,90 @@
+{
+  "name": "Comment",
+  "type": "object",
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.moderation_status": {
+            "$nin": [
+              "pending_review",
+              "blocked"
+            ]
+          }
+        },
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "review_id": {
+      "type": "string",
+      "description": "ID of the review being commented on"
+    },
+    "content": {
+      "type": "string",
+      "description": "Comment text"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Name of the commenter"
+    },
+    "author_email": {
+      "type": "string",
+      "description": "Email of the commenter"
+    },
+    "moderation_status": {
+      "type": "string",
+      "enum": [
+        "approved",
+        "pending_review",
+        "blocked"
+      ],
+      "default": "approved",
+      "description": "AI moderation status \u2014 same lifecycle as reviews"
+    },
+    "moderation_categories": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "moderation_reason": {
+      "type": "string"
+    },
+    "moderation_confidence": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "review_id",
+    "content"
+  ]
+}

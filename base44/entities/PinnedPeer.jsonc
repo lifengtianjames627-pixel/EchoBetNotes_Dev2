@@ -1,0 +1,93 @@
+{
+  "name": "PinnedPeer",
+  "type": "object",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Who pinned this person"
+    },
+    "peer_email": {
+      "type": "string",
+      "description": "The pinned person's email"
+    },
+    "peer_name": {
+      "type": "string",
+      "description": "Display name of the pinned person"
+    }
+  },
+  "required": [
+    "owner_email",
+    "peer_email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user"
+              }
+            },
+            {
+              "data.owner_email": "{{user.email}}"
+            }
+          ]
+        }
+      ]
+    },
+    "create": {
+      "$and": [
+        {
+          "$or": [
+            {
+              "user_condition": {
+                "role": "user"
+              }
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        },
+        {
+          "created_by_id": "{{user.id}}",
+          "data.owner_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "user_condition": {
+                "role": "user"
+              }
+            },
+            {
+              "data.owner_email": "{{user.email}}"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

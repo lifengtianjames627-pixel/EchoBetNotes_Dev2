@@ -1,0 +1,23 @@
+{
+  "name": "BandFollow",
+  "type": "object",
+  "properties": {
+    "band_id": {
+      "type": "string",
+      "description": "ID of the band"
+    },
+    "band_name": {
+      "type": "string"
+    },
+    "follower_email": {
+      "type": "string"
+    },
+    "follower_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "band_id",
+    "follower_email"
+  ]
+}
