@@ -1,0 +1,23 @@
+---
+description: Agent safety — git, secrets, data, local DB
+alwaysApply: true
+---
+
+# Agent permissions (project)
+
+## Allowed without asking the user
+
+- Read and edit application source in this repo.
+- Run project-local install, test, and build (npm/pnpm/yarn, docker compose).
+- `git status` and `git diff` only.
+
+## Ask the user first (or do not do)
+
+- `git commit`, `git push`, force push, deploy, or any production release.
+- Reading `.env` or credential files; use `.env.example` and mock values only.
+- Global software installs outside this project.
+- Real user PII; use fixtures and mock data only.
+
+## Local data
+
+- Database: Docker Compose Postgres on localhost only, not production.

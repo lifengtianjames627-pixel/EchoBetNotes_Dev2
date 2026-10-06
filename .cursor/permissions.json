@@ -1,0 +1,33 @@
+{
+  "terminalAllowlist": [
+    "git status",
+    "git diff",
+    "npm",
+    "pnpm",
+    "yarn",
+    "npx",
+    "node",
+    "docker compose",
+    "docker-compose",
+    "bash",
+    "sh"
+  ],
+  "mcpAllowlist": [
+    "cursor:WebSearch",
+    "cursor:WebFetch"
+  ],
+  "autoRun": {
+    "allow_instructions": [
+      "Project-local npm/pnpm/yarn install, test, and build scripts.",
+      "Read-only git status and git diff.",
+      "Docker Compose for local Postgres and dev services only.",
+      "Bash or shell scripts inside this repository for dev/test."
+    ],
+    "block_instructions": [
+      "Do not run git commit, git push, git push --force, or any deploy/release command without explicit user approval.",
+      "Do not read, cat, type, or open .env or other secret/credential files.",
+      "Do not run global package installs (npm i -g, pip install --user, etc.).",
+      "Do not connect to production databases or use production API keys."
+    ]
+  }
+}
