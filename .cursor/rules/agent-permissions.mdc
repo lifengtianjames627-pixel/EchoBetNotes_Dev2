@@ -5,6 +5,14 @@ alwaysApply: true
 
 # Agent permissions (project)
 
+## Mandatory project guidance
+
+- Read `DEVELOPMENT_CHARTER.md` before planning or changing application code.
+- For delegated work, follow `docs/agents/WORKFLOW.md`.
+- Target architecture is defined by `docs/architecture/TARGET_ARCHITECTURE.md` and
+  `docs/architecture/DATABASE.md`.
+- The new charter overrides the legacy `charter.md` where they conflict.
+
 ## Allowed without asking the user
 
 - Read and edit application source in this repo.
