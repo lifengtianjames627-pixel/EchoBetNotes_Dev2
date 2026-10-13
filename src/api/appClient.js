@@ -224,6 +224,15 @@ const entityClient = new Proxy({}, {
 });
 
 const authClient = {
+  async isAuthenticated() {
+    try {
+      await authClient.me();
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
   async me() {
     return request('/api/auth/me');
   },
