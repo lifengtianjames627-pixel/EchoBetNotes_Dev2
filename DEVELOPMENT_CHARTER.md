@@ -1,11 +1,31 @@
 # Echoes Between Notes — Development Charter
 
-Version: 2.0  
+Version: 2.2  
 Status: mandatory  
-Target: complete migration from Base44 to Next.js on Vercel  
+Target: complete migration from Base44 to a long-running Next.js server  
 
 This charter has priority over the legacy `charter.md` whenever they conflict. The legacy
 file records the Base44 implementation history; it does not define the target architecture.
+
+## Repositories and clearing order
+
+- `EchosBetweenNotes` is the Base44 reference. It will be updated on a separate front. This
+  migration does not wait for that front, and the Next.js application is not built there.
+- This repository (`EchoBetNotes_Dev2`) is the migration workspace. Base44 runtime code here
+  is cleared as each replacement passes the gates in section 10: the frontend becomes Next.js
+  (App Router, TypeScript), application data moves to PostgreSQL, and backend logic moves
+  into Route Handlers shaped for the hosting server. Tailwind CSS stays.
+- Production is one long-running Node.js process on a hosting server, started with
+  `next start`. It is not a Vercel deployment. Do not add Express beside Next.js.
+- Route Handlers under `app/api/**/route.ts` run inside that process. Write them as ordinary
+  handlers in a resident server: reuse the process database pool. Do not write Vercel
+  serverless or Edge functions, and do not assume each request is a fresh isolate.
+- "Safe PostgreSQL" means the rules in section 4 and `docs/architecture/DATABASE.md`:
+  constraints, parameterized access, forward-only migrations, disposable test databases, and
+  no production data or database secrets in the client.
+- Agents may read `EchosBetweenNotes` to recover product behavior. They must not copy
+  `@base44/sdk` imports, Base44 function invokes, or Base44 entity calls into new runtime
+  code in this repository.
 
 ## 1. Non-negotiable target
 
@@ -13,12 +33,17 @@ file records the Base44 implementation history; it does not define the target ar
 - New runtime code MUST NOT import `@base44/sdk`, invoke Base44 functions, use Base44
   entities, rely on Base44 auth, or depend on Base44 storage/realtime services.
 - The web application MUST use Next.js App Router and TypeScript in strict mode.
-- HTTP endpoints MUST be Next.js Route Handlers under `app/api/**/route.ts`.
-- Express MUST NOT be added. A long-running Node server MUST NOT be assumed on Vercel.
+- HTTP endpoints MUST be Next.js Route Handlers under `app/api/**/route.ts`, running inside
+  the long-running Node process. They MUST NOT be written as Vercel serverless or Edge
+  functions.
+- Do not add Express. `next start` is the hosting-server process. `npm run dev` is the same
+  application in development.
 - PostgreSQL is the only authoritative application database.
-- Production deployment targets Vercel. Local development uses Docker Compose PostgreSQL.
-- Migration MUST be incremental and verifiable. Base44 code may remain temporarily only as
-  read-only reference until its replacement passes parity and migration gates.
+- Production deployment is that Node process on a hosting server, plus PostgreSQL. Local
+  development uses Docker Compose PostgreSQL.
+- Migration MUST be incremental and verifiable. Base44 runtime code in this repository is
+  removed when its replacement passes the gates in section 10. It is not kept here as a second
+  codebase. Product history remains in `EchosBetweenNotes`.
 
 ## 2. Required architecture
 
@@ -73,8 +98,8 @@ The normative design is in `docs/architecture/TARGET_ARCHITECTURE.md`.
   application code is forbidden for contested values.
 - Queries MUST be bounded and paginated. Full-table scans in request handlers are forbidden.
 - User lookup and relationships MUST use user IDs. Email is private profile data, not a key.
-- Production uses a provider-managed pooled PostgreSQL endpoint suitable for serverless.
-  A module-level client singleton is an optimization, not a substitute for an external pooler.
+- The server process keeps one PostgreSQL pool for its lifetime. Do not open a client per
+  request, and do not require a serverless driver or an external pooler.
 - Tests MUST use disposable databases, schemas, or provider branches and MUST never use
   production data.
 
@@ -134,6 +159,8 @@ The target schema and transaction requirements are in `docs/architecture/DATABAS
 ## 7. Frontend requirements
 
 - Preserve current product routes and visual identity unless a task explicitly changes them.
+- Tailwind CSS remains the styling system. Do not replace it with another CSS framework
+  during the migration.
 - Server Components are the default. Add `"use client"` only for state, effects, event
   handlers, or browser APIs.
 - Expected HTTP failures MUST render localized, user-friendly states. Raw errors are forbidden.
@@ -219,7 +246,8 @@ invokes, entity calls, environment variables, deployment hooks, or undocumented 
 - temporary data and files were cleaned;
 - documentation reflects the actual implementation;
 - remaining risks are explicit;
-- no commit, push, or deployment occurred without user approval.
+- a reviewed task may be delivered on a feature branch and pull request. Production deploy,
+  force-push, and production data mutation still require explicit user approval.
 
 Passing locally does not mean production-ready. A milestone closes only after independent review.
 
@@ -234,5 +262,6 @@ An agent MUST stop and report instead of guessing when:
 - observed behavior contradicts the documented contract;
 - three repair cycles fail for the same task;
 - test cleanup cannot be proven;
-- the requested action requires commit, push, deploy, or production mutation without approval.
+- the requested action requires a production deploy, force-push, or production data mutation
+  without explicit approval.
 

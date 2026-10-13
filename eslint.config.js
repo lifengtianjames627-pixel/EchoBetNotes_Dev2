@@ -3,12 +3,16 @@ import pluginJs from "@eslint/js";
 import pluginReact from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginUnusedImports from "eslint-plugin-unused-imports";
+import tseslint from "typescript-eslint";
 
 export default [
   {
+    ignores: [".next/**"],
+  },
+  {
     files: [
       "src/components/**/*.{js,mjs,cjs,jsx}",
-      "src/pages/**/*.{js,mjs,cjs,jsx}",
+      "src/screens/**/*.{js,mjs,cjs,jsx}",
       "src/Layout.jsx",
     ],
     ignores: ["src/lib/**/*", "src/components/ui/**/*"],
@@ -57,4 +61,8 @@ export default [
       "react-hooks/rules-of-hooks": "error",
     },
   },
+  ...tseslint.configs.recommended.map((config) => ({
+    ...config,
+    files: ["app/**/*.{ts,tsx}"],
+  })),
 ];

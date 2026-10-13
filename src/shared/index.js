@@ -3,7 +3,7 @@
 //
 // Anything used by more than one feature area lives here, so there is exactly
 // one definition of each rule. Feature-specific UI stays in its own folder
-// under src/components/<domain>/ and src/pages/.
+// under src/components/<domain>/ and src/screens/.
 //
 //   shared/config/genres    → the genre roster, paper palette, skins, share
 //                             colors, slug aliases, theme builder

@@ -497,7 +497,7 @@ Required controls:
 local       -> Docker Compose PostgreSQL, mock integrations
 test        -> disposable database/schema per test run
 preview     -> isolated pooled PostgreSQL branch, synthetic users only
-production  -> production pooled PostgreSQL, no automated load tests
+production  -> PostgreSQL reached by the server process pool, no automated load tests
 ```
 
 Migration commands require an explicit environment and must refuse ambiguous or production-like
