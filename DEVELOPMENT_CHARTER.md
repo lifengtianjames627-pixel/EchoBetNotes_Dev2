@@ -1,8 +1,8 @@
 # Echoes Between Notes — Development Charter
 
-Version: 2.1  
+Version: 2.2  
 Status: mandatory  
-Target: complete migration from Base44 to Next.js on Vercel  
+Target: complete migration from Base44 to a long-running Next.js server  
 
 This charter has priority over the legacy `charter.md` whenever they conflict. The legacy
 file records the Base44 implementation history; it does not define the target architecture.
@@ -15,8 +15,11 @@ file records the Base44 implementation history; it does not define the target ar
   is cleared as each replacement passes the gates in section 10: the frontend becomes Next.js
   (App Router, TypeScript), application data moves to PostgreSQL, and backend logic moves
   into Route Handlers shaped for the hosting server. Tailwind CSS stays.
-- The hosting server is Vercel. Backend logic fits that host as `app/api/**/route.ts`
-  functions. It does not move to Express or to a long-running custom Node server.
+- Production is one long-running Node.js process on a hosting server, started with
+  `next start`. It is not a Vercel deployment. Do not add Express beside Next.js.
+- Route Handlers under `app/api/**/route.ts` run inside that process. Write them as ordinary
+  handlers in a resident server: reuse the process database pool. Do not write Vercel
+  serverless or Edge functions, and do not assume each request is a fresh isolate.
 - "Safe PostgreSQL" means the rules in section 4 and `docs/architecture/DATABASE.md`:
   constraints, parameterized access, forward-only migrations, disposable test databases, and
   no production data or database secrets in the client.
@@ -30,10 +33,14 @@ file records the Base44 implementation history; it does not define the target ar
 - New runtime code MUST NOT import `@base44/sdk`, invoke Base44 functions, use Base44
   entities, rely on Base44 auth, or depend on Base44 storage/realtime services.
 - The web application MUST use Next.js App Router and TypeScript in strict mode.
-- HTTP endpoints MUST be Next.js Route Handlers under `app/api/**/route.ts`.
-- Express MUST NOT be added. A long-running Node server MUST NOT be assumed on Vercel.
+- HTTP endpoints MUST be Next.js Route Handlers under `app/api/**/route.ts`, running inside
+  the long-running Node process. They MUST NOT be written as Vercel serverless or Edge
+  functions.
+- Do not add Express. `next start` is the hosting-server process. `npm run dev` is the same
+  application in development.
 - PostgreSQL is the only authoritative application database.
-- Production deployment targets Vercel. Local development uses Docker Compose PostgreSQL.
+- Production deployment is that Node process on a hosting server, plus PostgreSQL. Local
+  development uses Docker Compose PostgreSQL.
 - Migration MUST be incremental and verifiable. Base44 runtime code in this repository is
   removed when its replacement passes the gates in section 10. It is not kept here as a second
   codebase. Product history remains in `EchosBetweenNotes`.
@@ -91,8 +98,8 @@ The normative design is in `docs/architecture/TARGET_ARCHITECTURE.md`.
   application code is forbidden for contested values.
 - Queries MUST be bounded and paginated. Full-table scans in request handlers are forbidden.
 - User lookup and relationships MUST use user IDs. Email is private profile data, not a key.
-- Production uses a provider-managed pooled PostgreSQL endpoint suitable for serverless.
-  A module-level client singleton is an optimization, not a substitute for an external pooler.
+- The server process keeps one PostgreSQL pool for its lifetime. Do not open a client per
+  request, and do not require a serverless driver or an external pooler.
 - Tests MUST use disposable databases, schemas, or provider branches and MUST never use
   production data.
 

@@ -39,6 +39,8 @@ docker compose down -v
 
 Application startup must not run migrations. Schema changes stay in reviewed migration tasks and are not applied by starting the app or by starting this Compose service.
 
+`npm run dev` and `npm run start` are the long-running Node process for this app. They are the same shape of server used on the hosting machine. They are not serverless functions.
+
 Apply the committed forward migrations to the local database:
 
 ```bash

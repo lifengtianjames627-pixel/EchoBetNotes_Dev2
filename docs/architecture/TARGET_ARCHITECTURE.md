@@ -1,34 +1,34 @@
 # Target Architecture
 
 Status: normative target for migration  
-Runtime: Next.js App Router on Vercel  
+Runtime: long-running Next.js server (`next start`) on a hosting server  
 Persistence: PostgreSQL  
 Legacy source: React + Vite + Base44  
 
 ## 1. Architecture decision
 
-The target is a single Next.js application deployed to Vercel:
+The target is one Next.js application that stays running on a hosting server. `npm run dev`
+and `npm run start` (`next start`) are that process. Vercel is not the deployment target.
 
 ```text
 Browser
-  -> Next.js App Router
+  -> long-running Next.js Node process
      -> Server Components / Client Components
      -> Route Handlers (app/api/**/route.ts)
         -> auth + authorization
         -> Zod validation
         -> domain service
         -> repository
-        -> PostgreSQL
+        -> PostgreSQL pool owned by the process
      -> object storage
      -> approved external services
 ```
 
-Express is intentionally excluded. Next.js Route Handlers already provide the HTTP boundary that
-Vercel deploys as serverless functions. Wrapping them in Express would add a second router, obscure
-per-route deployment behavior, and encourage assumptions about long-lived process state.
+Route Handlers are request functions inside that resident process. They are not serverless
+isolates. Do not set an Edge runtime, a Vercel `maxDuration`, or any per-invocation lifecycle.
+Express is not added: a second router would split the hosting process in two.
 
-The root-level Vercel convention `api/*.js` and the Next.js App Router convention are alternatives.
-This project uses the App Router convention:
+HTTP routes use the App Router:
 
 ```text
 app/api/reviews/route.ts
@@ -42,7 +42,7 @@ app/api/reviews/[reviewId]/votes/route.ts
 - React version required by that Next.js release.
 - TypeScript with `strict: true`; no unchecked project-wide `any`.
 - Auth.js with the Drizzle adapter.
-- PostgreSQL 16 locally; managed serverless-compatible PostgreSQL in deployed environments.
+- PostgreSQL 16 locally and in deployed environments. The Node process owns the connection pool.
 - Drizzle ORM and `drizzle-kit` for typed queries and forward migrations.
 - Zod for environment, request, response, and form validation.
 - TanStack Query only for genuinely client-driven server state; prefer Server Components for
@@ -51,9 +51,8 @@ app/api/reviews/[reviewId]/votes/route.ts
 - Vitest for units/integration, React Testing Library for components, Playwright for E2E, and k6
   for bounded load tests.
 
-Provider selection for production PostgreSQL may use a Vercel-integrated service such as Neon.
-The hard requirement is PostgreSQL plus an external pooled endpoint; application code must not
-depend on provider-specific data semantics.
+Production PostgreSQL is a normal database the hosting server can reach. The vendor is open.
+Application code must not depend on a serverless driver or on provider-specific data semantics.
 
 ## 3. Repository shape
 
@@ -173,17 +172,18 @@ Business logic and database calls do not belong in this function.
 
 ## 6. Runtime and connection rules
 
-- Database-backed handlers use the Node.js runtime unless an explicitly verified driver permits
-  the Edge runtime.
-- Production `DATABASE_URL` must point to the provider's pooled endpoint.
-- A cached module-level client avoids recreating clients within a warm function instance.
-- The function may be frozen or destroyed at any time; no correctness may depend on memory state.
+- The production process is Node.js via `next start`. Database-backed code uses that process.
+  Do not use the Edge runtime.
+- `src/lib/db/client.ts` creates one pool when the process starts and reuses it for every request.
+- Correctness that must survive a restart belongs in PostgreSQL, not in process memory. A restart
+  drops the pool and in-memory state; it does not freeze a single request mid-flight the way a
+  serverless isolate does.
 - Transactions must complete within one request and one database.
-- Long-running work must move to a queue or background workflow; a Vercel function is not a job
-  runner.
+- Work that should outlive the HTTP response belongs in a job started by this same server, or in
+  a worker process on the same host. Do not model it as a serverless background invocation.
 - Every external request has an abort timeout.
-- Route-specific `maxDuration` may be raised only with documented need and plan compatibility.
-- WebSocket servers cannot live inside ordinary Vercel route handlers.
+- A later milestone may attach WebSockets to this same Node process. Do not add a separate
+  realtime host until that milestone says so.
 
 ## 7. Domain migration map
 
@@ -205,7 +205,8 @@ adapter, tests, data migration, reconciliation, and Base44 call removal.
 
 ## 8. Realtime strategy
 
-Vercel Route Handlers are not persistent WebSocket servers.
+The hosting process stays up, so WebSockets can be added on that same Node server later.
+The first migration still uses polling so messaging does not depend on a new transport.
 
 Migration baseline:
 
@@ -270,8 +271,10 @@ before protected feature writes move.
 
 ## 13. Explicitly rejected patterns
 
-- Express mounted inside Next.js.
+- Vercel serverless deployment, Edge runtime, and per-request function timeouts.
+- Express mounted beside or inside Next.js.
 - root `api/*.js` mixed with App Router handlers.
+- Opening a new database client on every request.
 - direct database calls from React components or route handlers.
 - email-based ownership and relationship keys.
 - unbounded `.list()` then in-memory filtering.

@@ -13,6 +13,7 @@ M1 creates a Next.js host, local PostgreSQL, and a proof migration. It does not 
 - `src/pages` is renamed to `src/screens` before any `app/` directory exists, because Next.js would otherwise treat those Vite screens as Pages Router routes.
 - React stays on 18.2 for this milestone so the legacy Vite UI is unchanged. Next.js is `next@16.4`, not canary.
 - Tailwind 3 stays. No Express. No Auth.js. No product tables. The only new relation is `schema_health`.
+- After M1, the deployment target changed from Vercel serverless functions to one long-running `next start` process on a hosting server. Route Handlers stay inside that process.
 - Charter gates 5, 6, 7, 9, and 10 are NOT RUN for M1 (no API, product UI, E2E, protected resource, or hot path).
 
 ## Tasks
