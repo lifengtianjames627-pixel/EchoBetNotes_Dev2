@@ -1,6 +1,6 @@
 # M1-scaffold
 
-Status: DEVELOPING(M1-T2, M1-T3)  
+Status: DEVELOPING(M1-T3)  
 Plan Agent: bc-5b0564ab-4650-51a6-972d-b43b922fc269  
 Updated: 2026-10-13
 
@@ -20,7 +20,7 @@ M1 creates a Next.js host, local PostgreSQL, and a proof migration. It does not 
 | ID | State | Depends on | Owner |
 | --- | --- | --- | --- |
 | M1-T1 | passed | none | Dev bc-5bd13a17; Check bc-6a924c1a PASS |
-| M1-T2 | developing | M1-T1 | Dev Agent (assigned) |
+| M1-T2 | passed | M1-T1 | Dev bc-60814a0c; Check bc-8edd1acc PASS |
 | M1-T3 | developing | M1-T1 | Dev Agent (assigned) |
 | M1-T4 | blocked | M1-T2 | unassigned |
 | M1-T5 | blocked | M1-T3, M1-T4 | unassigned |
