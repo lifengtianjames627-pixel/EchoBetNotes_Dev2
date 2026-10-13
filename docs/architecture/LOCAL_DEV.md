@@ -38,3 +38,19 @@ docker compose down -v
 ## Migrations
 
 Application startup must not run migrations. Schema changes stay in reviewed migration tasks and are not applied by starting the app or by starting this Compose service.
+
+Apply the committed forward migrations to the local database:
+
+```bash
+set -a && . ./.env.example && set +a
+npm run db:migrate
+```
+
+`npm run db:migrate` runs `tsx src/lib/db/migrate.ts`. Run it again to confirm an already-applied migration is left in place.
+
+Prove the migration against a disposable database, then drop that database:
+
+```bash
+set -a && . ./.env.example && set +a
+npm run test:integration
+```

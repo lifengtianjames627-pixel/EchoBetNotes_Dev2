@@ -1,6 +1,6 @@
 # M1-scaffold
 
-Status: DEVELOPING(M1-T5)  
+Status: COMPLETE  
 Plan Agent: bc-5b0564ab-4650-51a6-972d-b43b922fc269  
 Updated: 2026-10-13
 
@@ -22,8 +22,8 @@ M1 creates a Next.js host, local PostgreSQL, and a proof migration. It does not 
 | M1-T1 | passed | none | Dev bc-5bd13a17; Check bc-6a924c1a PASS |
 | M1-T2 | passed | M1-T1 | Dev bc-60814a0c; Check bc-8edd1acc PASS |
 | M1-T3 | passed | M1-T1 | Dev bc-fa1ad46e; Check bc-a3c5ddbd PASS |
-| M1-T4 | checking | M1-T2 | Dev bc-af5d1fa4 |
-| M1-T5 | blocked | M1-T3, M1-T4 | unassigned |
+| M1-T4 | passed | M1-T2 | Dev bc-af5d1fa4; Check bc-426c8bcb PASS after one repair |
+| M1-T5 | passed | M1-T3, M1-T4 | Dev bc-801eb41f; Check bc-33e2215b PASS |
 
 M1-T2 and M1-T3 may run in parallel after M1-T1 passes check. They do not share files.
 M1-T4 and M1-T5 both edit `package.json` and run only after their dependencies pass.
