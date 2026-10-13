@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Languages } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useLang } from '@/i18n/LanguageContext';
 import boardCopy from '@/components/reviews/boardCopy';
 
@@ -17,7 +17,7 @@ export default function TranslateButton({ text, onResult }) {
     if (translated) { setState('shown'); onResult(translated); return; }
     setState('loading');
     try {
-      const res = await base44.functions.invoke('translateText', { text, target: lang });
+      const res = await apiClient.functions.invoke('translateText', { text, target: lang });
       const out = res.data?.translated;
       if (!out) throw new Error('empty');
       setTranslated(out);

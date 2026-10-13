@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Loader2, Users } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useQuery } from '@tanstack/react-query';
 import PosterCard from '@/components/soulmate/PosterCard';
 import CreatePostModal, { INSTRUMENTS } from '@/components/soulmate/CreatePostModal';
@@ -20,7 +20,7 @@ export default function SoulmateBoard() {
   const [search, setSearch] = useState('');
   const [creating, setCreating] = useState(false);
 
-  const { data: currentUser } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+  const { data: currentUser } = useQuery({ queryKey: ['me'], queryFn: () => apiClient.auth.me() });
   const { data: allPosts = [], isLoading, error, refetch } = useRecruitPosts(currentUser);
 
   const posts = allPosts

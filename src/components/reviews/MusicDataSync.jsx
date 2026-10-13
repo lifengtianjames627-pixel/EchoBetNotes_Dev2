@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { isMusicQuery, refreshMusic } from '@/shared/reviews/catalog';
 export default function MusicDataSync() {
   const client = useQueryClient();
@@ -19,7 +19,7 @@ export default function MusicDataSync() {
       clearTimeout(timer);
       timer = setTimeout(() => refreshMusic(client), 200);
     };
-    const stops = ['Album','Review','Podcast'].map(kind => base44.entities[kind].subscribe(e => changed(kind, e)));
+    const stops = ['Album','Review','Podcast'].map(kind => apiClient.entities[kind].subscribe(e => changed(kind, e)));
     return () => { clearTimeout(timer); stops.forEach(stop => stop()); };
   }, [client]);
   return null;

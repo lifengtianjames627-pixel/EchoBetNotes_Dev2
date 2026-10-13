@@ -1,4 +1,4 @@
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 
 import { isAlbumReview } from '@/features/reviews/model/reviewRules';
 export { isAlbumReview, isApproved } from '@/features/reviews/model/reviewRules';
@@ -8,7 +8,7 @@ export async function withCurrentAlbums(reviews, { keepMissing = false } = {}) {
   const ids = [...new Set(reviews.filter(isAlbumReview).map(r => r.album_id).filter(id => typeof id === 'string' && /^[a-f\d]{24}$/i.test(id)))];
   const albums = [];
   for (let i = 0; i < ids.length; i += 100) {
-    albums.push(...await base44.entities.Album.filter({ id: { $in: ids.slice(i, i + 100) } }, '-created_date', 100));
+    albums.push(...await apiClient.entities.Album.filter({ id: { $in: ids.slice(i, i + 100) } }, '-created_date', 100));
   }
   const byId = new Map(albums.map(a => [a.id, a]));
   return reviews.flatMap(r => {

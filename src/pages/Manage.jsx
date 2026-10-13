@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { Shield, ArrowLeft } from 'lucide-react';
 
 // Admin-only member roster. Shows each member's public identity plus
@@ -12,7 +12,7 @@ export default function Manage() {
   const navigate = useNavigate();
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['manage-users'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => apiClient.entities.User.list(),
   });
 
   return (

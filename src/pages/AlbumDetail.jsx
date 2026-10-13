@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ export default function AlbumDetail() {
 
   const { data: currentUser } = useQuery({
     queryKey: ['me'],
-    queryFn: () => base44.auth.me(),
+    queryFn: () => apiClient.auth.me(),
   });
   const { album, loadingAlbum, reviews } = useAlbumReviewData(id, currentUser);
 

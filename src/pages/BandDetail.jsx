@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -21,26 +21,26 @@ export default function BandDetail() {
   const { data: band, isLoading } = useQuery({
     queryKey: ['band', id],
     queryFn: async () => {
-      const bands = await base44.entities.Band.filter({ id });
+      const bands = await apiClient.entities.Band.filter({ id });
       return bands[0];
     },
   });
 
   const { data: members = [] } = useQuery({
     queryKey: ['band-members', id],
-    queryFn: () => base44.entities.BandMember.filter({ band_id: id }),
+    queryFn: () => apiClient.entities.BandMember.filter({ band_id: id }),
   });
 
   const { data: currentUser } = useQuery({
     queryKey: ['me'],
-    queryFn: () => base44.auth.me(),
+    queryFn: () => apiClient.auth.me(),
   });
 
   const isMember = members.some((m) => m.user_email === currentUser?.email);
 
   const joinBand = useMutation({
     mutationFn: async () => {
-      await base44.entities.BandMember.create({
+      await apiClient.entities.BandMember.create({
         band_id: id,
         band_name: band.name,
         user_email: currentUser.email,
@@ -48,7 +48,7 @@ export default function BandDetail() {
         role: myRole || 'Member',
         is_founder: false,
       });
-      await base44.entities.Band.update(id, { member_count: (band.member_count || 1) + 1 });
+      await apiClient.entities.Band.update(id, { member_count: (band.member_count || 1) + 1 });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['band-members', id] });

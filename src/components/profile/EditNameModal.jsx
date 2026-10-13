@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useReviewerProfileRefresh } from '@/components/ReviewerProfileProvider';
 import { Loader2, X } from 'lucide-react';
 
@@ -27,10 +27,10 @@ export default function EditNameModal({ user, onClose }) {
     if (trimmed.length > 40) { setErr('Keep it under 40 characters.'); return; }
     setSaving(true); setErr('');
     try {
-      await base44.auth.updateMe({ display_name: trimmed });
+      await apiClient.auth.updateMe({ display_name: trimmed });
       // Re-sync this member's name to every historical record that snapshotted it
       // (reviews, posts, comments, messages, …) so the new name shows everywhere.
-      await base44.functions.invoke('propagateProfile', {});
+      await apiClient.functions.invoke('propagateProfile', {});
       refreshProfiles(); // drop live-profile cache so review cards re-fetch the new name
       await queryClient.invalidateQueries({ queryKey: ['me'] });
       queryClient.invalidateQueries(); // refresh all cached lists so new names render

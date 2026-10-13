@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -23,24 +23,24 @@ export default function Bands() {
 
   const { data: bands = [], isLoading } = useQuery({
     queryKey: ['bands'],
-    queryFn: () => base44.entities.Band.list('-created_date', 100),
+    queryFn: () => apiClient.entities.Band.list('-created_date', 100),
   });
 
   const { data: currentUser } = useQuery({
     queryKey: ['me'],
-    queryFn: () => base44.auth.me(),
+    queryFn: () => apiClient.auth.me(),
   });
 
   const createBand = useMutation({
     mutationFn: /** @param {import('@/shared/types/interactionTypes').BandCreateInput} data */ async (data) => {
-      const band = await base44.entities.Band.create({
+      const band = await apiClient.entities.Band.create({
         ...data,
         looking_for: data.looking_for ? data.looking_for.split(',').map(s => s.trim()).filter(Boolean) : [],
         member_count: 1,
         status: 'recruiting',
       });
       // Add creator as founder
-      await base44.entities.BandMember.create({
+      await apiClient.entities.BandMember.create({
         band_id: band.id,
         band_name: data.name,
         user_email: currentUser.email,

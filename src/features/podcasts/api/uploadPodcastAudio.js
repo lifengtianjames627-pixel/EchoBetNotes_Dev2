@@ -1,6 +1,6 @@
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import sendAudioPart from '@/features/podcasts/api/sendAudioPart';
-const call = async data => (await base44.functions.invoke('podcastUpload', data)).data;
+const call = async data => (await apiClient.functions.invoke('podcastUpload', data)).data;
 export const abortPodcastUpload = sessionId => call({ action: 'abort', session_id: sessionId });
 /** @param {File} file @param {(percent: number) => void} onProgress */
 export default async function uploadPodcastAudio(file, onProgress) {

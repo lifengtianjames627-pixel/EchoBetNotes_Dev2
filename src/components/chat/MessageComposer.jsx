@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Send, Smile, Paperclip, Loader2, X } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import EmojiPicker from './EmojiPicker';
 
 const MAX = 2000;
@@ -18,7 +18,7 @@ export default function MessageComposer({ V, value, onChange, onSend, placeholde
     e.target.value = '';
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await apiClient.integrations.Core.UploadFile({ file });
     setUploading(false);
     setPending({
       url: file_url,

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Camera, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useReviewerProfileRefresh } from '@/components/ReviewerProfileProvider';
 
 // Paper avatar: a cream plate with an ochre serif monogram by default, or the
@@ -17,8 +17,8 @@ export default function ProfileAvatar({ pictureUrl, initial, size = 74, editable
     if (!file) return;
     setBusy(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      await base44.auth.updateMe({ profile_picture_url: file_url });
+      const { file_url } = await apiClient.integrations.Core.UploadFile({ file });
+      await apiClient.auth.updateMe({ profile_picture_url: file_url });
       refreshProfiles(); // drop live-profile cache so review avatars re-fetch
       queryClient.invalidateQueries({ queryKey: ['me'] });
       queryClient.invalidateQueries({ queryKey: ['public-profile'] });

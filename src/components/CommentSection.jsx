@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, ChevronDown, ChevronUp, Send, Trash2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { awardBadge } from '@/lib/badgeUtils';
 import { publicName, initialOf } from '@/shared/identity';
@@ -21,7 +21,7 @@ export default function CommentSection({ reviewId, v, currentUser }) {
 
   const { data: allComments = [] } = useQuery({
     queryKey: ['comments', reviewId],
-    queryFn: () => base44.entities.Comment.filter({ review_id: reviewId }, 'created_date', 50),
+    queryFn: () => apiClient.entities.Comment.filter({ review_id: reviewId }, 'created_date', 50),
     enabled: open,
   });
   // Only show approved comments publicly (same rule as reviews)
@@ -33,7 +33,7 @@ export default function CommentSection({ reviewId, v, currentUser }) {
 
       const modStatus = modResult.suggestedAction === 'review' ? 'pending_review' : 'approved';
 
-      await base44.entities.Comment.create({
+      await apiClient.entities.Comment.create({
         review_id: reviewId,
         content,
         author_name: publicName(currentUser),
@@ -53,13 +53,13 @@ export default function CommentSection({ reviewId, v, currentUser }) {
         return;
       }
       // Check community badges for review author
-      const review = await base44.entities.Review.filter({ id: reviewId });
+      const review = await apiClient.entities.Review.filter({ id: reviewId });
       const reviewerEmail = review[0]?.reviewer_email;
       if (reviewerEmail) {
-        const allReviews = await base44.entities.Review.filter({ reviewer_email: reviewerEmail });
+        const allReviews = await apiClient.entities.Review.filter({ reviewer_email: reviewerEmail });
         let total = 0;
         for (const r of allReviews) {
-          const c = await base44.entities.Comment.filter({ review_id: r.id });
+          const c = await apiClient.entities.Comment.filter({ review_id: r.id });
           total += c.length;
         }
         if (total >= 10) awardBadge(reviewerEmail, 'comments_10', queryClient);
@@ -125,7 +125,7 @@ export default function CommentSection({ reviewId, v, currentUser }) {
                       <button
                         onClick={() => {
                           if (window.confirm('Delete this comment?')) {
-                            base44.entities.Comment.delete(c.id).then(() =>
+                            apiClient.entities.Comment.delete(c.id).then(() =>
                               queryClient.invalidateQueries({ queryKey: ['comments', reviewId] })
                             );
                           }

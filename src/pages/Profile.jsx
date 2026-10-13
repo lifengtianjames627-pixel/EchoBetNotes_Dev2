@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ReviewCard from '@/components/ReviewCard';
 import { withCurrentAlbums } from '@/shared/reviews/catalog';
@@ -36,17 +36,17 @@ export default function Profile() {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [showEditName, setShowEditName] = useState(false);
 
-  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => apiClient.auth.me() });
 
   const { data: myReviews = [] } = useQuery({
     queryKey: ['my-reviews', user?.email],
-    queryFn: async () => withCurrentAlbums(await base44.entities.Review.filter({ created_by_id: user.id }, '-created_date', 50), { keepMissing: true }),
+    queryFn: async () => withCurrentAlbums(await apiClient.entities.Review.filter({ created_by_id: user.id }, '-created_date', 50), { keepMissing: true }),
     enabled: !!user,
   });
 
   const { data: earnedBadges = [] } = useQuery({
     queryKey: ['earned-badges', user?.email],
-    queryFn: () => base44.entities.UserBadge.filter({ user_email: user.email }),
+    queryFn: () => apiClient.entities.UserBadge.filter({ user_email: user.email }),
     enabled: !!user,
   });
   const earnedBadgeIds = earnedBadges.map(b => b.badge_id);
@@ -60,7 +60,7 @@ export default function Profile() {
   // Albums are needed to work out genre-breadth and readership badges.
   const { data: allAlbums = [] } = useQuery({
     queryKey: ['all-albums-for-badges'],
-    queryFn: () => base44.entities.Album.list('-created_date', 500),
+    queryFn: () => apiClient.entities.Album.list('-created_date', 500),
     enabled: !!user,
   });
 
@@ -82,7 +82,7 @@ export default function Profile() {
     if (searchQuery.trim().length < 2 || selectedFriend) { setSearching(false); return; }
     setSearching(true);
     const timeout = setTimeout(() => {
-      base44.functions.invoke('searchUsers', { query: searchQuery.trim() })
+      apiClient.functions.invoke('searchUsers', { query: searchQuery.trim() })
         .then(res => { if (active) { setSearchResults(res.data?.results || []); } })
         .catch(() => { if (active) setSearchError(true); })
         .finally(() => { if (active) setSearching(false); });
@@ -92,7 +92,7 @@ export default function Profile() {
 
   const selectFriend = useMutation({
     mutationFn: async id => {
-      const { data } = await base44.functions.invoke('publicProfile', { user_id: id });
+      const { data } = await apiClient.functions.invoke('publicProfile', { user_id: id });
       if (!data.found) throw new Error(copy.profileUnavailable);
       return data;
     },

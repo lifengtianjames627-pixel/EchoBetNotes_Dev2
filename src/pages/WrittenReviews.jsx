@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, PenLine } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { GENRES } from '@/lib/genreConfig';
 import { useLang } from '@/i18n/LanguageContext';
 import { useGenreText } from '@/i18n/useGenreText';
@@ -27,7 +27,7 @@ export default function WrittenReviews() {
   const [openStory, setOpenStory] = useState(null);
   const [composing, setComposing] = useState(false);
 
-  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me(), enabled: authed });
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => apiClient.auth.me(), enabled: authed });
   const copy = boardCopy(useLang().lang);
   const { board, albumReviews, stories, roundups, isLoading, isError, refetch } = useReviewsBoard();
 

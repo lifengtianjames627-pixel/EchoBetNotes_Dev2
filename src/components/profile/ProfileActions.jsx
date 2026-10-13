@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { UserPlus, MessageSquare, Check, Clock, Send, Lock } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { makeChatId } from '@/lib/useChat';
 import { useFriendStatus } from '@/shared/chat/useFriendStatus';
 import { useFriendMutation } from '@/features/friends/queries/useFriendRequests';
@@ -25,7 +25,7 @@ export default function ProfileActions({ me, targetEmail, targetName }) {
   const { isFriend, sentRequest: pendingOut, incomingRequest: pendingIn, query: friendQuery } = useFriendStatus(me?.email, targetEmail);
   const { data: messages = [] } = useQuery({
     queryKey: ['chat', chatId],
-    queryFn: () => base44.entities.ChatMessage.filter({ chat_id: chatId }, 'created_date', 200),
+    queryFn: () => apiClient.entities.ChatMessage.filter({ chat_id: chatId }, 'created_date', 200),
     enabled: !!chatId,
   });
 
@@ -35,7 +35,7 @@ export default function ProfileActions({ me, targetEmail, targetName }) {
   const addFriend = useFriendMutation();
 
   const sendIntro = useMutation({
-    mutationFn: () => base44.functions.invoke('sendChatMessage', { chat_id: chatId, content: text.trim(), context: 'profile' }),
+    mutationFn: () => apiClient.functions.invoke('sendChatMessage', { chat_id: chatId, content: text.trim(), context: 'profile' }),
     onSuccess: () => {
       setText(''); setComposing(false);
       queryClient.invalidateQueries({ queryKey: ['chat', chatId] });

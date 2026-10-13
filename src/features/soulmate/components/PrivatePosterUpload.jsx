@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useLang } from '@/i18n/LanguageContext';
 import privacyCopy from '@/features/soulmate/i18n/privacyCopy';
 import recruitCopy from '@/features/soulmate/i18n/recruitCopy';
@@ -14,7 +14,7 @@ export default function PrivatePosterUpload({ onChange, onUploading, disabled })
     if (!['image/png', 'image/jpeg', 'image/webp'].includes(selected.type) || selected.size > 5 * 1024 * 1024) { setError(copy.invalidImage); return; }
     setBusy(true); onUploading(true); setError('');
     try {
-      const { data } = await base44.functions.invoke('uploadRecruitPoster', { file: selected });
+      const { data } = await apiClient.functions.invoke('uploadRecruitPoster', { file: selected });
       onChange(data.asset_id); setFile(selected);
     } catch (e) { setError(e.response?.data?.error === 'INVALID_IMAGE' ? copy.invalidImage : shared.failed); }
     finally { setBusy(false); onUploading(false); }

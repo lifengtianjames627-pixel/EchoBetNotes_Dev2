@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Music, Loader2, ListMusic, ChevronDown, Save } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import AlbumMatchPreview from '@/components/AlbumMatchPreview';
 import { storeCoverImage } from '@/lib/storeCoverImage';
 
@@ -230,7 +230,7 @@ async function fetchFromLastfm(title, artist) {
 
 async function resolveAcgTitle(title, artist) {
   try {
-    const res = await base44.functions.invoke('resolveAcgTitle', { title, artist });
+    const res = await apiClient.functions.invoke('resolveAcgTitle', { title, artist });
     return res.data;
   } catch { return null; }
 }
@@ -241,7 +241,7 @@ async function resolveAcgTitle(title, artist) {
 
 async function fetchFromNetease(title, artist) {
   try {
-    const res = await base44.functions.invoke('fetchNetease', { title, artist });
+    const res = await apiClient.functions.invoke('fetchNetease', { title, artist });
     return res.data?.tracks?.length ? res.data : null;
   } catch { return null; }
 }
@@ -344,7 +344,7 @@ export default function TrackList({ item, v, onDataFetched, onTrackClick }) {
           setPendingUpdate(update);
         } else {
           // Initial automatic match — save right away as before.
-          base44.entities.Album.update(item.id, update);
+          apiClient.entities.Album.update(item.id, update);
         }
       } else if (isRetry) {
         setTracks([]);
@@ -355,7 +355,7 @@ export default function TrackList({ item, v, onDataFetched, onTrackClick }) {
 
   const handleSave = async () => {
     if (!pendingUpdate) return;
-    await base44.entities.Album.update(item.id, pendingUpdate);
+    await apiClient.entities.Album.update(item.id, pendingUpdate);
     setPendingUpdate(null);
   };
 

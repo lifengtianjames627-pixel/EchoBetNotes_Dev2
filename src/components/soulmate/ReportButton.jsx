@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flag, X, Check } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useMutation } from '@tanstack/react-query';
 import { displayName } from '@/lib/displayName';
 
@@ -24,7 +24,7 @@ export default function ReportButton({ targetType, targetId, targetSummary, targ
   const [sent, setSent] = useState(false);
 
   const submit = useMutation({
-    mutationFn: () => base44.entities.Report.create({
+    mutationFn: () => apiClient.entities.Report.create({
       target_type: targetType,
       target_id: targetId,
       target_summary: (targetSummary || '').slice(0, 500),

@@ -11,7 +11,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 
 export const ANONYMOUS = 'Anonymous';
 
@@ -69,6 +69,6 @@ export function useAuthed() {
   const { isAuthenticated } = useAuth();
   return {
     authed: !!isAuthenticated,
-    login: () => base44.auth.redirectToLogin(window.location.pathname + window.location.search),
+    login: () => apiClient.auth.redirectToLogin(window.location.pathname + window.location.search),
   };
 }

@@ -1,4 +1,4 @@
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { displayName } from '@/lib/displayName';
 import { publicName } from '@/shared/identity';
 
@@ -11,7 +11,7 @@ const moderationFields = mod => ({
 
 export async function publishAlbumReview({ data, album, user, moderate }) {
   const mod = await moderate(`${data.title}\n${data.content}`);
-  const review = await base44.entities.Review.create({
+  const review = await apiClient.entities.Review.create({
     ...data,
     album_id: album.id,
     album_title: album.title,
@@ -22,7 +22,7 @@ export async function publishAlbumReview({ data, album, user, moderate }) {
     ...moderationFields(mod),
     likes_count: 0,
   });
-  await base44.functions.invoke('editReview', { action: 'syncRating', album_id: album.id });
+  await apiClient.functions.invoke('editReview', { action: 'syncRating', album_id: album.id });
   return review;
 }
 
@@ -41,11 +41,11 @@ export async function publishStoryReview({ draft, user, moderate }) {
       title: a.title.trim(), artist: a.artist.trim(), cover_url: a.cover_url.trim(), blurb: a.blurb.trim(),
     }));
   }
-  return base44.entities.Review.create(payload);
+  return apiClient.entities.Review.create(payload);
 }
 
 export async function saveReviewEdit(review, draft) {
-  return (await base44.functions.invoke('editReview', {
+  return (await apiClient.functions.invoke('editReview', {
     id: review.id, changes: draft, expected_edit: review.edited_at || null,
   })).data;
 }

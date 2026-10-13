@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { GENRES } from '@/lib/genreConfig';
 import { ArrowLeft } from 'lucide-react';
@@ -174,7 +174,7 @@ export default function GenreSpace() {
   const handleItemClick = (item) => {
     setSelectedItem(item);
     // Increment click count for popularity tracking
-    base44.entities.Album.update(item.id, { click_count: (item.click_count || 0) + 1 });
+    apiClient.entities.Album.update(item.id, { click_count: (item.click_count || 0) + 1 });
   };
 
   const genre = GENRES.find(g => g.id === genreId);
@@ -192,7 +192,7 @@ export default function GenreSpace() {
     queryKey: ['genre-albums', genreId],
     queryFn: async () => {
       if (!entityGenre) return [];
-      return base44.entities.Album.filter({ genre: entityGenre }, '-created_date', 200);
+      return apiClient.entities.Album.filter({ genre: entityGenre }, '-created_date', 200);
     },
     enabled: !!entityGenre,
   });
@@ -231,7 +231,7 @@ export default function GenreSpace() {
         cover_url = await fetchSingleCover(data.title, data.artist, entityGenre) || '';
       }
 
-      return base44.entities.Album.create({ ...data, cover_url, genre: entityGenre || 'other', avg_rating: 0, review_count: 0 });
+      return apiClient.entities.Album.create({ ...data, cover_url, genre: entityGenre || 'other', avg_rating: 0, review_count: 0 });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['genre-albums', genreId] });
@@ -262,7 +262,7 @@ export default function GenreSpace() {
           if (result?.coverUrl) {
             const stored = await storeCoverImage(result.coverUrl);
             if (stored) {
-              await base44.entities.Album.update(item.id, { cover_url: stored });
+              await apiClient.entities.Album.update(item.id, { cover_url: stored });
               queryClient.setQueryData(['genre-albums', genreId], /** @param {import('@/shared/types/interactionTypes').MusicRecord[] | undefined} old */ (old) =>
                 old ? old.map(it => (it.id === item.id ? { ...it, cover_url: stored } : it)) : old
               );

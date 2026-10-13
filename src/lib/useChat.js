@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { displayName } from '@/lib/displayName';
 
 // Shared chat data layer for both the mini popup and the full page.
@@ -21,7 +21,7 @@ export function useChat({ chatId, currentUser, limit = 200 }) {
 
   const { data: messages = [], isLoading } = useQuery({
     queryKey,
-    queryFn: async () => (await base44.entities.ChatMessage.filter({ chat_id: chatId }, '-created_date', limit)).reverse(),
+    queryFn: async () => (await apiClient.entities.ChatMessage.filter({ chat_id: chatId }, '-created_date', limit)).reverse(),
     enabled: !!chatId,
     refetchInterval: 8000,
     placeholderData: (prev) => prev,
@@ -31,8 +31,9 @@ export function useChat({ chatId, currentUser, limit = 200 }) {
   // Realtime: react to writes as they happen rather than on a timer.
   useEffect(() => {
     if (!chatId) return;
-    const unsubscribe = base44.entities.ChatMessage.subscribe((event) => {
-      if (event?.data?.chat_id === chatId) {
+    const unsubscribe = apiClient.entities.ChatMessage.subscribe((event) => {
+      // Fallback polling subscriptions may not include row payloads.
+      if (!event?.data || event?.data?.chat_id === chatId) {
         queryClient.invalidateQueries({ queryKey });
       }
     });
@@ -43,7 +44,7 @@ export function useChat({ chatId, currentUser, limit = 200 }) {
   const normalize = (payload) => (typeof payload === 'string' ? { content: payload } : payload);
 
   const send = useMutation({
-    mutationFn: async (payload) => (await base44.functions.invoke('sendChatMessage', {
+    mutationFn: async (payload) => (await apiClient.functions.invoke('sendChatMessage', {
       ...normalize(payload), chat_id: chatId,
     })).data.message,
     onMutate: async (payload) => {

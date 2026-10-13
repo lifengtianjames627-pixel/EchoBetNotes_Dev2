@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { X, Star, Search } from 'lucide-react';
 import { loadDraft, saveDraft, clearDraft } from '@/lib/reviewDraft';
 import { displayName } from '@/lib/displayName';
@@ -34,7 +34,7 @@ export default function VirtualItemModal({ v, initialTitle = '', initialArtist =
   const [matched, setMatched] = useState(null); // real Album entity, once found or created
   const queryClient = useQueryClient();
   const { data: reviews = [] } = useQuery({ queryKey: ['virtual-reviews', matched?.id], enabled: !!matched?.id,
-    queryFn: async () => (await base44.entities.Review.filter({ album_id: matched.id }, '-created_date', 100)).filter(r => !r.moderation_status || r.moderation_status === 'approved' || r.created_by_id === currentUser?.id),
+    queryFn: async () => (await apiClient.entities.Review.filter({ album_id: matched.id }, '-created_date', 100)).filter(r => !r.moderation_status || r.moderation_status === 'approved' || r.created_by_id === currentUser?.id),
   });
   const [showForm, setShowForm] = useState(false);
   const [rating, setRating] = useState(0);
@@ -64,10 +64,10 @@ export default function VirtualItemModal({ v, initialTitle = '', initialArtist =
     setChecking(true);
     let found = null;
     try {
-      const exact = await base44.entities.Album.filter({ type, title, artist });
+      const exact = await apiClient.entities.Album.filter({ type, title, artist });
       found = exact[0] || null;
       if (!found) {
-        const sameType = await base44.entities.Album.filter({ type }, '-created_date', 200);
+        const sameType = await apiClient.entities.Album.filter({ type }, '-created_date', 200);
         found = sameType.find(a => a.title?.toLowerCase() === title.toLowerCase() && a.artist?.toLowerCase() === artist.toLowerCase()) || null;
       }
     } catch { /* ignore */ }
@@ -88,7 +88,7 @@ export default function VirtualItemModal({ v, initialTitle = '', initialArtist =
 
     let modResult = { suggestedAction: 'allow', categories: [], reason: '', confidence: 0 };
     try {
-      const res = await base44.functions.invoke('moderateContent', { text: content });
+      const res = await apiClient.functions.invoke('moderateContent', { text: content });
       modResult = res.data;
     } catch { /* allow on failure */ }
 
@@ -100,14 +100,14 @@ export default function VirtualItemModal({ v, initialTitle = '', initialArtist =
 
     let album = matched;
     if (!album) {
-      album = await base44.entities.Album.create({
+      album = await apiClient.entities.Album.create({
         title, artist, type, genre, cover_url: coverUrl || '', review_count: 0, avg_rating: 0,
       });
       setMatched(album);
     }
 
     const modStatus = modResult.suggestedAction === 'review' ? 'pending_review' : 'approved';
-    const newReview = await base44.entities.Review.create({
+    const newReview = await apiClient.entities.Review.create({
       album_id: album.id,
       album_title: title,
       album_artist: artist,
@@ -126,7 +126,7 @@ export default function VirtualItemModal({ v, initialTitle = '', initialArtist =
     });
 
     if (modStatus === 'approved') {
-      await base44.functions.invoke('editReview', { action: 'syncRating', album_id: album.id });
+      await apiClient.functions.invoke('editReview', { action: 'syncRating', album_id: album.id });
     }
     refreshMusic(queryClient);
     setRating(0);

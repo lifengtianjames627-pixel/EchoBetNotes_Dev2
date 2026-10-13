@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -53,7 +53,7 @@ export default function DirectChat() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const bottomRef = useRef(null);
 
-  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => apiClient.auth.me() });
 
   const chatId = user?.email && peerEmail ? makeChatId(user.email, peerEmail) : null;
   const { messages, send } = useChat({ chatId, currentUser: user, limit: 200 });
@@ -81,10 +81,10 @@ export default function DirectChat() {
     let cancelled = false;
     (async () => {
       try {
-        const fresh = await base44.auth.me();
+        const fresh = await apiClient.auth.me();
         const prev = (typeof fresh.messages_last_seen === 'object' && fresh.messages_last_seen && !Array.isArray(fresh.messages_last_seen))
           ? fresh.messages_last_seen : {};
-        await base44.auth.updateMe({ messages_last_seen: { ...prev, [peerEmail]: new Date().toISOString() } });
+        await apiClient.auth.updateMe({ messages_last_seen: { ...prev, [peerEmail]: new Date().toISOString() } });
         if (cancelled) return;
         queryClient.invalidateQueries({ queryKey: ['me'] });
         queryClient.invalidateQueries({ queryKey: ['messageUnread'] });
@@ -113,13 +113,13 @@ export default function DirectChat() {
 
   const searchQuery = useQuery({
     queryKey: ['user-search', user?.id, 'open-discovery', search],
-    queryFn: () => base44.functions.invoke('searchUsers', { query: search.trim() }).then(r => r.data),
+    queryFn: () => apiClient.functions.invoke('searchUsers', { query: search.trim() }).then(r => r.data),
     enabled: !!user?.id && search.trim().length >= 2,
   });
   const searchResults = searchQuery.data?.results || [];
   const openSearchResult = useMutation({
     mutationFn: async id => {
-      const { data } = await base44.functions.invoke('publicProfile', { user_id: id });
+      const { data } = await apiClient.functions.invoke('publicProfile', { user_id: id });
       if (!data.found) throw new Error(copy.profileUnavailable);
       return data;
     },

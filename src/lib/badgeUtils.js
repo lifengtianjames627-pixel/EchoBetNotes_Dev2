@@ -1,4 +1,4 @@
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { BADGE_MAP } from '@/lib/badgeConfig';
 import { notify } from '@/lib/notify';
 import { toast } from 'sonner';
@@ -13,9 +13,9 @@ export const getWeekKey = () => {
 export async function awardBadge(userEmail, badgeId, queryClient) {
   if (!userEmail || !badgeId) return false;
   try {
-    const existing = await base44.entities.UserBadge.filter({ user_email: userEmail, badge_id: badgeId });
+    const existing = await apiClient.entities.UserBadge.filter({ user_email: userEmail, badge_id: badgeId });
     if (existing.length > 0) return false;
-    await base44.entities.UserBadge.create({
+    await apiClient.entities.UserBadge.create({
       user_email: userEmail,
       badge_id: badgeId,
       earned_at: new Date().toISOString(),

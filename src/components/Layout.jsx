@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home as HomeIcon, Shield, LogOut, LogIn, MessageSquare, Users } from 'lucide-react';
 import NotificationBell from '@/components/NotificationBell';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useLang } from '@/i18n/LanguageContext';
 import LanguageButton from '@/components/LanguageButton';
 import SiteFooter from '@/components/SiteFooter';
@@ -26,7 +26,7 @@ export default function Layout() {
 
   const { data: currentUser } = useQuery({
     queryKey: ['me'],
-    queryFn: () => base44.auth.me(),
+    queryFn: () => apiClient.auth.me(),
   });
 
   // Tapping a member's avatar/name anywhere on the site dispatches this event;
@@ -46,13 +46,13 @@ export default function Layout() {
   // analytics page has a daily count. Errors are swallowed — stats are a
   // nice-to-have, never worth blocking the UI.
   useEffect(() => {
-    base44.functions.invoke('trackVisit', { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }).catch(() => {});
+    apiClient.functions.invoke('trackVisit', { timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }).catch(() => {});
   }, []);
 
   // Unread direct-message count for the Messages nav badge (polled).
   const { data: msgUnreadData } = useQuery({
     queryKey: ['messageUnread'],
-    queryFn: () => base44.functions.invoke('messageUnread', {}).then(r => r.data?.unread || 0),
+    queryFn: () => apiClient.functions.invoke('messageUnread', {}).then(r => r.data?.unread || 0),
     enabled: !!currentUser?.email,
     refetchInterval: 30000,
   });
@@ -61,13 +61,13 @@ export default function Layout() {
   // Pending moderation count for the Moderation nav badge (admins only, polled).
   const { data: pendingReviews = [] } = useQuery({
     queryKey: ['mod-pending-reviews'],
-    queryFn: () => base44.entities.Review.filter({ moderation_status: 'pending_review' }, '-created_date', 100),
+    queryFn: () => apiClient.entities.Review.filter({ moderation_status: 'pending_review' }, '-created_date', 100),
     enabled: currentUser?.role === 'admin',
     refetchInterval: 30000,
   });
   const { data: pendingComments = [] } = useQuery({
     queryKey: ['mod-pending-comments'],
-    queryFn: () => base44.entities.Comment.filter({ moderation_status: 'pending_review' }, '-created_date', 100),
+    queryFn: () => apiClient.entities.Comment.filter({ moderation_status: 'pending_review' }, '-created_date', 100),
     enabled: currentUser?.role === 'admin',
     refetchInterval: 30000,
   });
@@ -93,7 +93,7 @@ export default function Layout() {
       })();
       const monthKey = now.toISOString().slice(0, 7);
 
-      const prev = await base44.auth.me();
+      const prev = await apiClient.auth.me();
       const newTotal = (prev.total_browsing_minutes || 0) + elapsed;
 
       const newDaily = prev.daily_minutes_date === todayStr
@@ -103,7 +103,7 @@ export default function Layout() {
       const newMonthly = prev.monthly_minutes_month === monthKey
         ? (prev.monthly_minutes || 0) + elapsed : elapsed;
 
-      await base44.auth.updateMe({
+      await apiClient.auth.updateMe({
         total_browsing_minutes: newTotal,
         daily_minutes: newDaily,
         daily_minutes_date: todayStr,
@@ -164,7 +164,7 @@ export default function Layout() {
           <LanguageButton />
           {currentUser ? (
             <>
-              <button onClick={() => base44.auth.logout()} title={t('nav.logout')} className="w-9 h-9 rounded-full flex items-center justify-center transition-colors" style={{ color: '#6b6358', border: '1px solid rgba(26,24,21,0.14)' }}>
+              <button onClick={() => apiClient.auth.logout()} title={t('nav.logout')} className="w-9 h-9 rounded-full flex items-center justify-center transition-colors" style={{ color: '#6b6358', border: '1px solid rgba(26,24,21,0.14)' }}>
                 <LogOut className="w-4 h-4" />
               </button>
               <Link to="/profile" className="flex items-center gap-2 px-2.5 py-1.5 rounded-full transition-colors" style={{ border: '1px solid rgba(26,24,21,0.14)' }}>
@@ -177,7 +177,7 @@ export default function Layout() {
               </Link>
             </>
           ) : (
-            <button onClick={() => base44.auth.redirectToLogin()} className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors" style={{ background: '#1a1815', color: '#faf8f2' }}>
+            <button onClick={() => apiClient.auth.redirectToLogin()} className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors" style={{ background: '#1a1815', color: '#faf8f2' }}>
               <LogIn className="w-3.5 h-3.5" /> {t('nav.login')}
             </button>
           )}

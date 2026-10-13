@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, TrendingUp, TrendingDown, Users, PenLine, Disc3 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useLang } from '@/i18n/LanguageContext';
 
 // Admin-only analytics subpage (linked from the Moderation queue). A rising
@@ -16,19 +16,19 @@ export default function Stats() {
 
   const { data: stats = [] } = useQuery({
     queryKey: ['daily-stats'],
-    queryFn: () => base44.entities.DailyStat.list('-date', 60),
+    queryFn: () => apiClient.entities.DailyStat.list('-date', 60),
   });
   const { data: users = [] } = useQuery({
     queryKey: ['stats-users'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => apiClient.entities.User.list(),
   });
   const { data: reviews = [] } = useQuery({
     queryKey: ['stats-reviews'],
-    queryFn: () => base44.entities.Review.list('-created_date', 1000),
+    queryFn: () => apiClient.entities.Review.list('-created_date', 1000),
   });
   const { data: albums = [] } = useQuery({
     queryKey: ['stats-albums'],
-    queryFn: () => base44.entities.Album.list('-created_date', 1000),
+    queryFn: () => apiClient.entities.Album.list('-created_date', 1000),
   });
 
   // Build a continuous 30-day axis, filling 0 for days with no record yet.

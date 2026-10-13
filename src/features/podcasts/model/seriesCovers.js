@@ -1,8 +1,8 @@
 export const SERIES_COVERS = {
-  youth_ears_lab: 'https://media.base44.com/images/public/69bfbc84f5aa64ed245721b1/f3462fa78_generated_image.png',
-  sonic_technical_breakdown: 'https://media.base44.com/images/public/69bfbc84f5aa64ed245721b1/bd3e205ef_generated_image.png',
-  cross_cultural_sound: 'https://media.base44.com/images/public/69bfbc84f5aa64ed245721b1/9f1f6dd4d_generated_image.png',
-  live_scene_chronicle: 'https://media.base44.com/images/public/69bfbc84f5aa64ed245721b1/813f125f6_generated_image.png',
-  independent_creator: 'https://media.base44.com/images/public/69bfbc84f5aa64ed245721b1/a89f6e20f_generated_image.png',
-  behind_the_lyrics: 'https://media.base44.com/images/public/69bfbc84f5aa64ed245721b1/bc6363790_generated_image.png',
+  youth_ears_lab: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=900&q=80',
+  sonic_technical_breakdown: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=900&q=80',
+  cross_cultural_sound: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=900&q=80',
+  live_scene_chronicle: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=900&q=80',
+  independent_creator: 'https://images.unsplash.com/photo-1487180144351-b8472da7d491?auto=format&fit=crop&w=900&q=80',
+  behind_the_lyrics: 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?auto=format&fit=crop&w=900&q=80',
 };

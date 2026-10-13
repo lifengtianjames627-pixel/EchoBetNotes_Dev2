@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { publicName } from '@/shared/identity';
 
 // Pinned people live on their own records so they survive across devices.
@@ -9,15 +9,15 @@ export function usePins(currentUser) {
 
   const { data: pins = [] } = useQuery({
     queryKey: ['pinned-peers', email],
-    queryFn: () => base44.entities.PinnedPeer.filter({ owner_email: email }, '-created_date', 50),
+    queryFn: () => apiClient.entities.PinnedPeer.filter({ owner_email: email }, '-created_date', 50),
     enabled: !!email,
   });
 
   const toggle = useMutation({
     mutationFn: async (/** @type {{ peer_email: string, peer_name?: string }} */ { peer_email, peer_name }) => {
       const existing = pins.find(p => p.peer_email === peer_email);
-      if (existing) return base44.entities.PinnedPeer.delete(existing.id);
-      return base44.entities.PinnedPeer.create({ owner_email: email, peer_email, peer_name: publicName(peer_name) });
+      if (existing) return apiClient.entities.PinnedPeer.delete(existing.id);
+      return apiClient.entities.PinnedPeer.create({ owner_email: email, peer_email, peer_name: publicName(peer_name) });
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pinned-peers', email] }),
   });

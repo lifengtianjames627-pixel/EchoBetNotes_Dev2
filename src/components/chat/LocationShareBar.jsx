@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { Navigation, LocateFixed, ShieldCheck, AlertTriangle, Crosshair } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useMyLocation } from './useMyLocation';
 import { useLang } from '@/i18n/LanguageContext';
 import LocationConsentModal from './LocationConsentModal';
@@ -21,7 +21,7 @@ export default function LocationShareBar({ V, located, locationSource, myLat, my
   const requestLocation = (source, trigger) => { if (!busy) { returnFocusRef.current = trigger; setShowConsent(source); } };
   const autoTried = useRef(false);
 
-  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => apiClient.auth.me() });
   // Coarse pointers get the existing device-location shortcut; this does not prove GPS hardware.
   const hasGps = typeof window !== 'undefined'
     && window.matchMedia?.('(pointer: coarse)').matches

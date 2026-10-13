@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Save, Users, Music2, ChevronRight, UserMinus } from 'lucide-react';
@@ -98,11 +98,11 @@ export default function BandDashboard() {
   const [addMemberEmail, setAddMemberEmail] = useState('');
   const [addMemberRole, setAddMemberRole] = useState('');
 
-  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => apiClient.auth.me() });
 
   const { data: myMemberships = [] } = useQuery({
     queryKey: ['my-bands', user?.email],
-    queryFn: () => base44.entities.BandMember.filter({ user_email: user.email }),
+    queryFn: () => apiClient.entities.BandMember.filter({ user_email: user.email }),
     enabled: !!user,
   });
 
@@ -110,19 +110,19 @@ export default function BandDashboard() {
 
   const { data: allBands = [] } = useQuery({
     queryKey: ['bands-list'],
-    queryFn: () => base44.entities.Band.list('-created_date', 100),
+    queryFn: () => apiClient.entities.Band.list('-created_date', 100),
   });
   const myBands = allBands.filter(b => founderBandIds.includes(b.id));
 
   const { data: allMembers = [] } = useQuery({
     queryKey: ['band-members-all'],
-    queryFn: () => base44.entities.BandMember.list(),
+    queryFn: () => apiClient.entities.BandMember.list(),
   });
 
   const createBand = useMutation({
     mutationFn: /** @param {import('@/shared/types/interactionTypes').BandForm} form */ async (form) => {
-      const band = await base44.entities.Band.create(form);
-      await base44.entities.BandMember.create({
+      const band = await apiClient.entities.Band.create(form);
+      await apiClient.entities.BandMember.create({
         band_id: band.id,
         band_name: form.name,
         user_email: user.email,
@@ -140,12 +140,12 @@ export default function BandDashboard() {
   });
 
   const updateBand = useMutation({
-    mutationFn: /** @param {{ id: string, form: import('@/shared/types/interactionTypes').BandForm }} change */ ({ id, form }) => base44.entities.Band.update(id, form),
+    mutationFn: /** @param {{ id: string, form: import('@/shared/types/interactionTypes').BandForm }} change */ ({ id, form }) => apiClient.entities.Band.update(id, form),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['bands-list'] }); setEditing(null); },
   });
 
   const addMember = useMutation({
-    mutationFn: /** @param {{ bandId: string, bandName: string }} member */ ({ bandId, bandName }) => base44.entities.BandMember.create({
+    mutationFn: /** @param {{ bandId: string, bandName: string }} member */ ({ bandId, bandName }) => apiClient.entities.BandMember.create({
       band_id: bandId,
       band_name: bandName,
       user_email: addMemberEmail,
@@ -157,7 +157,7 @@ export default function BandDashboard() {
   });
 
   const removeMember = useMutation({
-    mutationFn: /** @param {string} id */ (id) => base44.entities.BandMember.delete(id),
+    mutationFn: /** @param {string} id */ (id) => apiClient.entities.BandMember.delete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['band-members-all'] }),
   });
 

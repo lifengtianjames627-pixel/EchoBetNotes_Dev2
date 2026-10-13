@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Shield, Check, X, Clock, AlertTriangle, ChevronDown, ChevronUp, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -105,12 +105,12 @@ export default function ModerationQueue() {
 
   const { data: currentUser } = useQuery({
     queryKey: ['me'],
-    queryFn: () => base44.auth.me(),
+    queryFn: () => apiClient.auth.me(),
   });
 
   const { data: reviews = [], isLoading: reviewsLoading } = useQuery({
     queryKey: ['moderation-reviews', filter],
-    queryFn: () => /** @type {Promise<import('@/shared/types/interactionTypes').ModerationRecord[]>} */ (base44.entities.Review.filter(
+    queryFn: () => /** @type {Promise<import('@/shared/types/interactionTypes').ModerationRecord[]>} */ (apiClient.entities.Review.filter(
       filter === 'all' ? {} : { moderation_status: filter },
       '-created_date',
       100
@@ -119,7 +119,7 @@ export default function ModerationQueue() {
 
   const { data: comments = [], isLoading: commentsLoading } = useQuery({
     queryKey: ['moderation-comments', filter],
-    queryFn: () => /** @type {Promise<import('@/shared/types/interactionTypes').ModerationRecord[]>} */ (base44.entities.Comment.filter(
+    queryFn: () => /** @type {Promise<import('@/shared/types/interactionTypes').ModerationRecord[]>} */ (apiClient.entities.Comment.filter(
       filter === 'all' ? {} : { moderation_status: filter },
       '-created_date',
       100
@@ -135,14 +135,14 @@ export default function ModerationQueue() {
   const isLoading = reviewsLoading || commentsLoading;
 
   const updateReviewStatus = useMutation({
-    mutationFn: /** @param {import('@/shared/types/interactionTypes').ModerationChange} change */ ({ id, status }) => base44.functions.invoke('editReview', { action: 'moderate', id, status }),
+    mutationFn: /** @param {import('@/shared/types/interactionTypes').ModerationChange} change */ ({ id, status }) => apiClient.functions.invoke('editReview', { action: 'moderate', id, status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ predicate: q => /album|review|homeFeed/.test(String(q.queryKey[0])) });
     },
   });
 
   const updateCommentStatus = useMutation({
-    mutationFn: /** @param {import('@/shared/types/interactionTypes').ModerationChange} change */ ({ id, status }) => base44.entities.Comment.update(id, { moderation_status: status }),
+    mutationFn: /** @param {import('@/shared/types/interactionTypes').ModerationChange} change */ ({ id, status }) => apiClient.entities.Comment.update(id, { moderation_status: status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['moderation-comments'] });
       queryClient.invalidateQueries({ queryKey: ['comments'] });

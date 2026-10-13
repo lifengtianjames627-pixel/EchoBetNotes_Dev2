@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ImageIcon, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import TagPicker from '@/components/TagPicker';
 
 export default function AddMusicModal({ v, type, onClose, onSubmit, isPending, errorMessage }) {
@@ -13,7 +13,7 @@ export default function AddMusicModal({ v, type, onClose, onSubmit, isPending, e
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await apiClient.integrations.Core.UploadFile({ file });
     setData(d => ({ ...d, cover_url: file_url }));
     setUploading(false);
   };

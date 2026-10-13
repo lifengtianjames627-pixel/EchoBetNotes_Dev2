@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 
 // Single source of truth for the AI moderation flow used by both review
 // creation and comment creation. Returns a `moderate(text)` function that
@@ -25,7 +25,7 @@ export function useContentModeration() {
     }
     let modResult = { isFlagged: false, confidence: 0, categories: [], reason: '', suggestedAction: 'allow' };
     try {
-      const res = await base44.functions.invoke('moderateContent', { text: textToCheck });
+      const res = await apiClient.functions.invoke('moderateContent', { text: textToCheck });
       modResult = res.data ?? modResult;
     } catch (_) {
       // AI failure → allow

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useLang } from '@/i18n/LanguageContext';
 import editCopy from '@/components/reviews/editCopy';
 import ReviewEditDialog from '@/components/reviews/ReviewEditDialog';
@@ -10,7 +10,7 @@ export default function ReviewEditControl({ review, user: userProp }) {
   const [editing, setEditing] = useState(false);
   const { lang } = useLang();
   const copy = editCopy(lang);
-  const { data: userQuery } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me(), enabled: !userProp });
+  const { data: userQuery } = useQuery({ queryKey: ['me'], queryFn: () => apiClient.auth.me(), enabled: !userProp });
   const user = userProp || userQuery;
   // Only the author can edit their own review — strictly matched by user id or reviewer email, never by admin role or anyone else
   const owner = Boolean(

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useMemo, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 
 // Batches per-card author lookups into one resolveProfiles call so a list of
 // reviews resolves all reviewer names + avatars in a single round-trip, then
@@ -17,7 +17,7 @@ export function ReviewerProfileProvider({ children }) {
     if (!emails.length) return;
     pendingRef.current = new Set();
     try {
-      const res = await base44.functions.invoke('resolveProfiles', { emails });
+      const res = await apiClient.functions.invoke('resolveProfiles', { emails });
       const results = res.data?.results || {};
       setCache(c => ({ ...c, ...results }));
     } catch (e) {
@@ -41,7 +41,7 @@ export function ReviewerProfileProvider({ children }) {
     const emails = Object.keys(cache);
     if (!emails.length) return;
     try {
-      const res = await base44.functions.invoke('resolveProfiles', { emails });
+      const res = await apiClient.functions.invoke('resolveProfiles', { emails });
       const results = res.data?.results || {};
       setCache(c => ({ ...c, ...results }));
     } catch (e) {

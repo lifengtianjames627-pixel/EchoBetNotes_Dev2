@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 
 // Route guard for viewer/user/admin tiering. Restricted routes (profile,
 // messages, bandmate discovery, band dashboard, moderation) are only for
@@ -10,7 +10,7 @@ export default function RequireAuth({ children }) {
 
   useEffect(() => {
     if (!isLoadingPublicSettings && !isLoadingAuth && !isAuthenticated) {
-      base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+      apiClient.auth.redirectToLogin(window.location.pathname + window.location.search);
     }
   }, [isAuthenticated, isLoadingAuth, isLoadingPublicSettings]);
 

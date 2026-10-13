@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Star, MessageSquare, Youtube, Maximize2, Minimize2, Share2, Trash2 } from 'lucide-react';
 import CivilityNotice from '@/components/CivilityNotice';
@@ -52,7 +52,7 @@ function ReviewForm({ albumId, album, v, currentUser, onSuccess, allReviews }) {
 
       const modStatus = modResult.suggestedAction === 'review' ? 'pending_review' : 'approved';
 
-      await base44.entities.Review.create({
+      await apiClient.entities.Review.create({
         album_id: albumId,
         album_title: album.title,
         album_artist: album.artist,
@@ -77,7 +77,7 @@ function ReviewForm({ albumId, album, v, currentUser, onSuccess, allReviews }) {
 
       // Only update avg rating for approved reviews
       if (modStatus === 'approved') {
-        await base44.functions.invoke('editReview', { action: 'syncRating', album_id: albumId });
+        await apiClient.functions.invoke('editReview', { action: 'syncRating', album_id: albumId });
       }
 
       return modStatus;
@@ -189,7 +189,7 @@ export default function MusicItemDetail({ item, v, onClose }) {
 
   const { data: currentUser } = useQuery({
     queryKey: ['me'],
-    queryFn: () => base44.auth.me(),
+    queryFn: () => apiClient.auth.me(),
   });
 
   const { authed, login } = useAuthed();
@@ -197,7 +197,7 @@ export default function MusicItemDetail({ item, v, onClose }) {
   const canDelete = currentUser?.role === 'admin' && currentUser?.full_name?.trim().toLowerCase() === 'fengtian james li';
 
   const deleteAlbum = useMutation({
-    mutationFn: () => base44.entities.Album.delete(item.id),
+    mutationFn: () => apiClient.entities.Album.delete(item.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ predicate: q => /album|review|homeFeed/.test(String(q.queryKey[0])) });
       onClose();
@@ -206,7 +206,7 @@ export default function MusicItemDetail({ item, v, onClose }) {
 
   const { data: allReviewsRaw = [], isLoading } = useQuery({
     queryKey: ['item-reviews', item.id],
-    queryFn: () => base44.entities.Review.filter({ album_id: item.id }, '-created_date', 100),
+    queryFn: () => apiClient.entities.Review.filter({ album_id: item.id }, '-created_date', 100),
   });
   // Only show approved reviews publicly
   const reviews = allReviewsRaw.filter(r => !r.moderation_status || r.moderation_status === 'approved' || r.created_by_id === currentUser?.id);
@@ -217,7 +217,7 @@ export default function MusicItemDetail({ item, v, onClose }) {
   const reviewerEmails = reviews.map(r => r.reviewer_email).filter(Boolean);
   const { data: liveBadges = {} } = useQuery({
     queryKey: ['live-equipped-badges', reviewerEmails.slice().sort().join(',')],
-    queryFn: async () => (await base44.functions.invoke('getEquippedBadges', { emails: reviewerEmails })).data.badges,
+    queryFn: async () => (await apiClient.functions.invoke('getEquippedBadges', { emails: reviewerEmails })).data.badges,
     enabled: reviewerEmails.length > 0,
   });
 

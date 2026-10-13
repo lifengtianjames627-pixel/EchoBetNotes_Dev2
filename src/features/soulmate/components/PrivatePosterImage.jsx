@@ -1,16 +1,16 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useLang } from '@/i18n/LanguageContext';
 import privacyCopy from '@/features/soulmate/i18n/privacyCopy';
 import recruitCopy from '@/features/soulmate/i18n/recruitCopy';
 export default function PrivatePosterImage({ post, className }) {
   const { lang } = useLang();
   const copy = privacyCopy(lang), shared = recruitCopy(lang);
-  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => apiClient.auth.me() });
   const image = useQuery({
     queryKey: ['recruit-poster', me?.id, 'open-discovery', post.id, post.moderation_status],
-    queryFn: async () => (await base44.functions.invoke('getRecruitPoster', { post_id: post.id })).data,
+    queryFn: async () => (await apiClient.functions.invoke('getRecruitPoster', { post_id: post.id })).data,
     enabled: !!me?.id && !!post.poster_asset_id, staleTime: 0, gcTime: 0,
     refetchInterval: 45000, refetchOnWindowFocus: 'always', retry: false,
   });

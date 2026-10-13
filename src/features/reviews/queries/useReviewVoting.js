@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { refreshMusic } from '@/features/reviews/queries/musicCache';
 import { notifyReviewLike } from '@/features/reviews/api/voteEffects';
 
@@ -10,7 +10,7 @@ export default function useReviewVoting({ review, currentUser }) {
   const key = ['my-vote', review.id, currentUser?.id];
   const votes = useQuery({
     queryKey: key,
-    queryFn: () => base44.entities.ReviewVote.filter({ review_id: review.id, voter_email: currentUser.email }, '-updated_date'),
+    queryFn: () => apiClient.entities.ReviewVote.filter({ review_id: review.id, voter_email: currentUser.email }, '-updated_date'),
     enabled: !!currentUser?.email,
   });
   const myVote = votes.data?.[0]?.vote || null;
@@ -20,7 +20,7 @@ export default function useReviewVoting({ review, currentUser }) {
   }, [review.id, review.likes_count, review.dislikes_count]);
   const voteMutation = useMutation({
     mutationFn: async (/** @type {'like'|'dislike'} */ type) => {
-      const response = await base44.functions.invoke('voteReview', { review_id: review.id, vote: myVote === type ? null : type });
+      const response = await apiClient.functions.invoke('voteReview', { review_id: review.id, vote: myVote === type ? null : type });
       return /** @type {VoteResult} */ (response.data);
     },
     onSuccess: async result => {

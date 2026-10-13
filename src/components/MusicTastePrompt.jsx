@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { X, Sparkles } from 'lucide-react';
 
 // Gentle paper banner shown to logged-in members who haven't picked their
@@ -14,7 +14,7 @@ export default function MusicTastePrompt() {
     () => localStorage.getItem('taste_prompt_dismissed') === '1'
   );
 
-  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+  const { data: user } = useQuery({ queryKey: ['me'], queryFn: () => apiClient.auth.me() });
 
   if (!user) return null;
   const prefs = Array.isArray(user.music_preferences) ? user.music_preferences : [];

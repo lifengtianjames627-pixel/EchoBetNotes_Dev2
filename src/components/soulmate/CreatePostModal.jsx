@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, AlertTriangle } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { findContactInfo } from '@/lib/contactFilter';
 import SafetyNotice from '@/components/soulmate/SafetyNotice';
@@ -88,7 +88,7 @@ export default function CreatePostModal({ currentUser, onClose }) {
         throw new Error(`CONTACT:${contact.join(', ')}`);
       }
 
-      const response = await base44.functions.invoke('publishRecruitPost', { draft: data, agreed });
+      const response = await apiClient.functions.invoke('publishRecruitPost', { draft: data, agreed });
       return response.data.action;
     },
     onSuccess: (action) => {

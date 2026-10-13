@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 import { Star, ArrowLeft } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import ReviewCard from '@/components/ReviewCard';
 import { withCurrentAlbums, isApproved } from '@/shared/reviews/catalog';
 import ProfileHero from '@/components/profile/ProfileHero';
@@ -21,11 +21,11 @@ export default function UserProfile() {
   const { lang } = useLang();
   const copy = privacyCopy(lang);
 
-  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => base44.auth.me() });
+  const { data: me } = useQuery({ queryKey: ['me'], queryFn: () => apiClient.auth.me() });
 
   const { data: profile, isLoading, error: profileError } = useQuery({
     queryKey: ['public-profile', me?.id, 'open-discovery', identifier],
-    queryFn: () => base44.functions.invoke('publicProfile', identifier.includes('@') ? { email: identifier } : { user_id: identifier }).then(r => r.data),
+    queryFn: () => apiClient.functions.invoke('publicProfile', identifier.includes('@') ? { email: identifier } : { user_id: identifier }).then(r => r.data),
     enabled: !!identifier && !!me?.id, retry: false,
   });
   // No secondary content or actions are requested before the server authorizes the profile.
@@ -33,20 +33,20 @@ export default function UserProfile() {
 
   const { data: reviews = [] } = useQuery({
     queryKey: ['user-reviews', me?.id, 'open-discovery', email],
-    queryFn: async () => withCurrentAlbums((await base44.entities.Review.filter({ reviewer_email: email }, '-created_date', 30)).filter(isApproved)),
+    queryFn: async () => withCurrentAlbums((await apiClient.entities.Review.filter({ reviewer_email: email }, '-created_date', 30)).filter(isApproved)),
     enabled: !!email,
   });
 
   const { data: badges = [] } = useQuery({
     queryKey: ['user-badges', me?.id, 'open-discovery', email],
-    queryFn: () => base44.entities.UserBadge.filter({ user_email: email }),
+    queryFn: () => apiClient.entities.UserBadge.filter({ user_email: email }),
     enabled: !!email,
   });
 
   // Admin-only: registration date + aggregate usage averages (never messages).
   const { data: adminUser } = useQuery({
     queryKey: ['admin-user-info', email],
-    queryFn: () => base44.entities.User.filter({ email }),
+    queryFn: () => apiClient.entities.User.filter({ email }),
     enabled: !!email && me?.role === 'admin',
   });
 

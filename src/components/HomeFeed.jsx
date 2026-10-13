@@ -2,7 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Sparkles, PenLine, Headphones, ArrowRight } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import CoverImage from '@/components/music/CoverImage';
 import PodcastCoverImage from '@/features/podcasts/components/PodcastCoverImage';
 import FeedQueryState from '@/components/reviews/FeedQueryState';
@@ -75,7 +75,7 @@ function SectionHeader({ icon: Icon, title, to = '' }) {
 export default function HomeFeed() {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['homeFeed'],
-    queryFn: () => base44.functions.invoke('homeFeed', {}).then(r => r.data),
+    queryFn: () => apiClient.functions.invoke('homeFeed', {}).then(r => r.data),
   });
 
   if (isLoading) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Loader2, Save } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { fetchCoverCascade } from '@/components/TrackList';
 import AlbumMatchPreview from '@/components/AlbumMatchPreview';
 import { storeCoverImage } from '@/lib/storeCoverImage';
@@ -31,7 +31,7 @@ export default function SingleCoverMatch({ item, v, onDataFetched }) {
           setPendingUpdate(update);
         } else {
           onDataFetched?.(update);
-          base44.entities.Album.update(item.id, update);
+          apiClient.entities.Album.update(item.id, update);
         }
       }
       setLoading(false);
@@ -41,7 +41,7 @@ export default function SingleCoverMatch({ item, v, onDataFetched }) {
   const handleSave = async () => {
     if (!pendingUpdate) return;
     onDataFetched?.(pendingUpdate);
-    await base44.entities.Album.update(item.id, pendingUpdate);
+    await apiClient.entities.Album.update(item.id, pendingUpdate);
     setPendingUpdate(null);
   };
 

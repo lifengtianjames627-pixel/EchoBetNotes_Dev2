@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { apiClient } from '@/api/appClient';
 import { useAuth } from '@/lib/AuthContext';
 import CoverImage from '@/components/music/CoverImage';
 import { SERIES_COVERS } from '@/features/podcasts/model/seriesCovers';
@@ -8,7 +8,7 @@ import { SERIES_COVERS } from '@/features/podcasts/model/seriesCovers';
 export default function PodcastCoverImage({ episode, className, alt = '' }) {
   const { isAuthenticated } = useAuth();
   const cover = useQuery({ queryKey: ['podcasts', 'cover', episode.id], enabled: !!(isAuthenticated && episode.has_uploaded_cover), staleTime: 45 * 60 * 1000,
-    queryFn: async () => { const response = await base44.functions.invoke('getPodcastAudio', { podcast_id: episode.id, kind: 'cover' }); return response.data.signed_url; } });
+    queryFn: async () => { const response = await apiClient.functions.invoke('getPodcastAudio', { podcast_id: episode.id, kind: 'cover' }); return response.data.signed_url; } });
   const src = cover.data || episode.cover_url || SERIES_COVERS[episode.category];
   return <CoverImage key={src} src={src} alt={alt} className={className} />;
 }
