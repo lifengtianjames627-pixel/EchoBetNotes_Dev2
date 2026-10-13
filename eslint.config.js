@@ -63,6 +63,6 @@ export default [
   },
   ...tseslint.configs.recommended.map((config) => ({
     ...config,
-    files: ["app/**/*.{ts,tsx}"],
+    files: ["app/**/*.{ts,tsx}", "src/lib/http/**/*.ts"],
   })),
 ];

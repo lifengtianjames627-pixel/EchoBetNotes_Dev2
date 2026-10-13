@@ -25,6 +25,7 @@
     "app/**/*.tsx",
     "db/**/*.ts",
     "src/lib/db/**/*.ts",
+    "src/lib/http/**/*.ts",
     "tests/**/*.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
