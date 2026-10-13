@@ -45,3 +45,7 @@ Plan report recorded from the Plan Agent on 2026-10-13.
 Dev Agent bc-5bd13a17 returned `blocked` because `npm run typecheck` exits 2. Structural checks, lint, and Vite build passed. The agent compared the error set with HEAD and reported the same 333 errors with only the `src/pages` to `src/screens` path prefix changed. The Main Agent amended the typecheck criterion.
 
 Check Agent bc-6a924c1a returned PASS with no findings. Lint and Vite build were re-run and exited 0. Legacy `tsc` remains NOT RUN as a gate.
+
+M1-T2 through M1-T5 passed independent checks. M1-T4 needed one repair: the unit test import dropped its `.ts` extension so strict `tsc` passes. Load testing is NOT RUN because this milestone does not change a product hot path.
+
+The ledger stays in `docs/plans/active/` until a later milestone moves it. Product screens, Base44 functions, and Auth.js are not migrated yet.
