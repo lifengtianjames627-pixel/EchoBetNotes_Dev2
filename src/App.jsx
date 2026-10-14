@@ -25,6 +25,7 @@ import ProfileSetup from '@/pages/ProfileSetup';
 import Manage from '@/pages/Manage';
 import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
+import Login from '@/pages/Login';
 // Access tiers: guests can browse reviews / podcasts / genres / albums / about.
 // Everything personal or social needs login; moderation needs admin.
 import RequireAuth from '@/components/RequireAuth';
@@ -55,6 +56,7 @@ const AuthenticatedApp = () => {
 
   return (
     <Routes>
+      <Route path="/login" element={<Login />} />
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/reviews" element={<WrittenReviews />} />

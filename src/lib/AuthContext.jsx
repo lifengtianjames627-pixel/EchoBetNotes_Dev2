@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { apiClient } from '@/api/appClient';
-import { appParams, tokenStore } from '@/lib/app-params';
+import { appParams } from '@/lib/app-params';
 
 const AuthContext = createContext(undefined);
 
@@ -56,12 +56,9 @@ export const AuthProvider = ({ children }) => {
         setAppPublicSettings(null);
       }
 
-      if (tokenStore.getToken()) {
-        await checkUserAuth();
-      } else {
-        setIsAuthenticated(false);
-        setUser(null);
-      }
+      // The dedicated backend supports both bearer tokens and httpOnly cookie
+      // sessions, so always probe /me instead of relying on readable storage.
+      await checkUserAuth();
     } catch (error) {
       setAuthError({
         type: 'unknown',
@@ -78,6 +75,11 @@ export const AuthProvider = ({ children }) => {
   const checkUserAuth = async () => {
     try {
       const currentUser = await apiClient.auth.me();
+      if (!currentUser?.id) {
+        setUser(null);
+        setIsAuthenticated(false);
+        return null;
+      }
       setUser(currentUser);
       setIsAuthenticated(true);
       return currentUser;

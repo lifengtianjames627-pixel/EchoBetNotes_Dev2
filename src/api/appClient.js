@@ -105,6 +105,13 @@ const request = async (path, { method = 'GET', body, headers = {}, credentials =
       { status: response.status, data, url: toUrl(path) },
     );
   }
+  if (response.status !== 204 && data === null) {
+    throw new ApiClientError('API returned a non-JSON response', {
+      status: 502,
+      data: { error: 'invalid_api_response' },
+      url: toUrl(path),
+    });
+  }
 
   return data;
 };
