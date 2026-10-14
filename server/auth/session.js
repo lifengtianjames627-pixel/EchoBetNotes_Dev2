@@ -3,32 +3,34 @@ import bcrypt from 'bcryptjs';
 import { config } from '../config/env.js';
 import { entity, newId } from '../entities/repository.js';
 import { pool, withTransaction } from '../db/pool.js';
+import {
+  assertValidPassword,
+  normalizeEmail,
+  parseLoginBody,
+  parseRegistrationBody,
+} from './credentials.js';
 
 const secret = new TextEncoder().encode(config.jwtSecret);
-const normalizeEmail = (value) => String(value || '').trim().toLowerCase();
 
 export async function hashPassword(password) {
-  if (typeof password !== 'string' || password.length < 10 || password.length > 200) {
-    throw Object.assign(new Error('Password must contain between 10 and 200 characters'), { statusCode: 400 });
-  }
+  assertValidPassword(password);
   return bcrypt.hash(password, 12);
 }
 
 export const verifyPassword = (password, hash) => bcrypt.compare(password, hash);
 
-export async function createAccount({ email, password, displayName }) {
-  const normalizedEmail = normalizeEmail(email);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-    throw Object.assign(new Error('A valid email is required'), { statusCode: 400 });
-  }
+export async function createAccount(body) {
+  const { email: normalizedEmail, password, displayName } = parseRegistrationBody(body);
   const passwordHash = await hashPassword(password);
   return withTransaction(async (client) => {
     const exists = await client.query('SELECT 1 FROM auth_accounts WHERE email = $1', [normalizedEmail]);
-    if (exists.rowCount) throw Object.assign(new Error('Account already exists'), { statusCode: 409 });
+    if (exists.rowCount) {
+      throw Object.assign(new Error('Account already exists'), { statusCode: 409, code: 'account_exists' });
+    }
     const user = await entity('User', client).create({
       email: normalizedEmail,
-      display_name: String(displayName || '').trim().slice(0, 120),
-      full_name: String(displayName || '').trim().slice(0, 120),
+      display_name: displayName,
+      full_name: displayName,
       role: normalizeEmail(config.bootstrapAdminEmail) === normalizedEmail ? 'admin' : 'user',
       equipped_badges: [],
     });
@@ -46,10 +48,15 @@ export async function authenticateCredentials(email, password) {
     'SELECT user_id, password_hash FROM auth_accounts WHERE email = $1',
     [normalizedEmail],
   );
-  if (!account.rows[0] || !(await verifyPassword(String(password || ''), account.rows[0].password_hash))) {
-    throw Object.assign(new Error('Invalid email or password'), { statusCode: 401 });
+  if (!account.rows[0] || !(await verifyPassword(password, account.rows[0].password_hash))) {
+    throw Object.assign(new Error('Invalid email or password'), { statusCode: 401, code: 'invalid_credentials' });
   }
   return entity('User').find(account.rows[0].user_id);
+}
+
+export async function loginWithBody(body) {
+  const { email, password } = parseLoginBody(body);
+  return authenticateCredentials(email, password);
 }
 
 export async function issueSession(user) {
