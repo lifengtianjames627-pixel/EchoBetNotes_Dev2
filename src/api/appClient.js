@@ -240,6 +240,24 @@ const authClient = {
     }
   },
 
+  async login(credentials) {
+    const result = await request('/api/auth/login', {
+      method: 'POST',
+      body: credentials,
+    });
+    if (result?.access_token) tokenStore.setToken(result.access_token);
+    return result;
+  },
+
+  async register(credentials) {
+    const result = await request('/api/auth/register', {
+      method: 'POST',
+      body: credentials,
+    });
+    if (result?.access_token) tokenStore.setToken(result.access_token);
+    return result;
+  },
+
   async me() {
     return request('/api/auth/me');
   },

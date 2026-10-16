@@ -37,11 +37,14 @@ deploy/
 ```bash
 npm ci
 cp .env.example .env.local
+docker compose -f deploy/docker-compose.dev.yml up -d
 npm run db:migrate
 npm run dev:full
 ```
 
-The Vite website runs on `http://localhost:5173`; the API runs on `http://localhost:3000`. Set `VITE_API_BASE_URL=http://localhost:3000` in `.env.local` when not using the Vite `/api` proxy.
+The Vite website runs on `http://localhost:5173`; the API runs on `http://localhost:3000`. Leave `VITE_API_BASE_URL` empty to use the Vite `/api` proxy, or set `VITE_API_BASE_URL=http://localhost:3000` when calling the API directly.
+
+Authentication uses the dedicated backend under `server/auth/` (JWT bearer token plus `HttpOnly` session cookie). The login page stores the bearer token for cross-origin development; production same-origin deployments can rely on the cookie alone.
 
 ### Create the first administrator
 

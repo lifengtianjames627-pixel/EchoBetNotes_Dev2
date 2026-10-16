@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { apiClient } from '@/api/appClient';
-import { appParams } from '@/lib/app-params';
+import { appParams, tokenStore } from '@/lib/app-params';
 
 const AuthContext = createContext(undefined);
 
@@ -82,18 +82,37 @@ export const AuthProvider = ({ children }) => {
       }
       setUser(currentUser);
       setIsAuthenticated(true);
+      setAuthError(null);
       return currentUser;
     } catch (error) {
       setIsAuthenticated(false);
       setUser(null);
-      if (error?.status === 401 || error?.status === 403) {
+      // Guests browsing public pages are expected to receive 401 from /me.
+      // Only surface unexpected auth failures (network, server, app settings).
+      if (error?.status !== 401 && error?.status !== 403) {
         setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required',
+          type: 'unknown',
+          message: error?.message || 'Failed to load your session',
         });
+      } else {
+        setAuthError(null);
       }
       return null;
     }
+  };
+
+  const applySession = async (session) => {
+    if (session?.access_token) {
+      tokenStore.setToken(session.access_token);
+    }
+    const currentUser = session?.user;
+    if (currentUser?.id) {
+      setUser(currentUser);
+      setIsAuthenticated(true);
+      setAuthError(null);
+      return currentUser;
+    }
+    return checkUserAuth();
   };
 
   const logout = (shouldRedirect = true) => {
@@ -131,6 +150,7 @@ export const AuthProvider = ({ children }) => {
         navigateToLogin,
         updateCurrentUser,
         checkAppState,
+        applySession,
       }}
     >
       {children}

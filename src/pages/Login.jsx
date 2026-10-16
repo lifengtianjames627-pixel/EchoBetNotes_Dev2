@@ -4,11 +4,12 @@ import AuthLayout from '@/components/AuthLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { apiClient } from '@/api/appClient';
-import { tokenStore } from '@/lib/app-params';
+import { useAuth } from '@/lib/AuthContext';
 import { LogIn } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { applySession } = useAuth();
   const [search] = useSearchParams();
   const [registering, setRegistering] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -20,14 +21,12 @@ export default function Login() {
     setBusy(true);
     setError('');
     try {
-      const result = await apiClient.request(registering ? '/api/auth/register' : '/api/auth/login', {
-        method: 'POST',
-        body: form,
-      });
-      tokenStore.setToken(result.access_token);
+      const result = registering
+        ? await apiClient.auth.register(form)
+        : await apiClient.auth.login({ email: form.email, password: form.password });
+      await applySession(result);
       const returnTo = search.get('returnTo');
       navigate(returnTo?.startsWith('/') ? returnTo : '/', { replace: true });
-      window.location.reload();
     } catch (reason) {
       setError(reason?.message || 'Unable to sign in');
     } finally {

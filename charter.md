@@ -156,8 +156,17 @@
 | 2026-10-03 | 采用本 Charter 作为持续开发与交接指南 | 此次仅建立文档，不改应用逻辑、路由、数据或视觉 |
 | 2026-10-03 | 采用渐进式按域重构，而非一次性全站重写 | 每个任务独立授权与验证 |
 | 2026-10-03 | 将 Next.js 作为后续独立迁移目标 | 当前 React + Vite 继续保持可用 |
+| 2026-10-14 | M4：自托管认证边界 refinement 与站点 construction 收尾 | Fastify `server/auth` 凭证解析与会话；前端 AuthContext/Login 对齐 cookie+bearer；`.env.example` 与本地 PostgreSQL compose；认证契约测试；不引入 Auth.js npm 包 |
 
 后续记录应写明日期、原因、影响范围、兼容性及验证状态；不要把计划写成完成事实。
+
+### M4 实施：2026-10-14 — 自托管认证 refinement 与站点 construction
+
+- 完成：`server/auth` 拆分凭证解析（邮箱规范化、`display_name` 别名、密码长度校验）；登录/注册路由与 `appClient.auth.login/register` 对齐；AuthContext 不再把游客 `/me` 401 当作全站错误；Login 通过 `applySession` 更新会话而无需整页 reload。
+- 完成：`.env.example`、`deploy/docker-compose.dev.yml`（本地 PostgreSQL）、`docs/plans/active/M4-auth-site-host.md`；新增 credentials 与 auth HTTP 集成测试（PGlite）。
+- 保留：Charter 产品不变量、暖纸视觉、路由语义；OAuth MCP 同意页仍不挂载于自托管 API；Next.js/Auth.js npm 仍为独立迁移目标文档，不在本仓库替换当前 Fastify 会话。
+- 验证通过：`npm test`、`npm run build:server`、`npm run build`、`npm run lint`、`npm run typecheck`。
+- 未验证：Docker 全栈生产部署、真实 TLS cookie、跨账号权限、六语言登录文案回归、全站业务保存路径。
 
 ### 第一轮实施：2026-10-03 — 首页展示边界与移动标题
 

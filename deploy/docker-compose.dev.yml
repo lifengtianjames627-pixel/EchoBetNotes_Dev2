@@ -1,0 +1,22 @@
+# Local PostgreSQL for `npm run db:migrate` and `npm run dev:server`.
+# Frontend still runs with `npm run dev` (Vite on :5173).
+services:
+  database:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: echoes
+      POSTGRES_USER: echoes
+      POSTGRES_PASSWORD: echoes
+    ports:
+      - "5432:5432"
+    volumes:
+      - echoes-postgres-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U echoes -d echoes"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  echoes-postgres-dev:

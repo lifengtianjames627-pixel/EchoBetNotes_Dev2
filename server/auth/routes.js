@@ -1,8 +1,8 @@
 import { config } from '../config/env.js';
 import {
-  authenticateCredentials,
   createAccount,
   issueSession,
+  loginWithBody,
   revokeSession,
   sessionIdFromToken,
   tokenFromRequest,
@@ -35,8 +35,7 @@ export async function authRoutes(app) {
   app.post('/api/auth/login', {
     config: { rateLimit: { max: 20, timeWindow: '15 minutes' } },
   }, async (request, reply) => {
-    const { email, password } = request.body || {};
-    const user = await authenticateCredentials(email, password);
+    const user = await loginWithBody(request.body);
     return sendSession(reply, user);
   });
 
