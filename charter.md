@@ -157,6 +157,7 @@
 | 2026-10-03 | 采用渐进式按域重构，而非一次性全站重写 | 每个任务独立授权与验证 |
 | 2026-10-03 | 将 Next.js 作为后续独立迁移目标 | 当前 React + Vite 继续保持可用 |
 | 2026-10-14 | M4：自托管认证边界 refinement 与站点 construction 收尾 | Fastify `server/auth` 凭证解析与会话；前端 AuthContext/Login 对齐 cookie+bearer；`.env.example` 与本地 PostgreSQL compose；认证契约测试；不引入 Auth.js npm 包 |
+| 2026-10-29 | M5：HTTP 可观测性与策略隔离测试 | `x-request-id` 与结构化 API 日志；错误响应附带 `requestId`；Vitest 单元/集成分离；PinnedPeer 跨账号隔离与 workflow-only 写入集成测试；成功响应形状不变 |
 
 后续记录应写明日期、原因、影响范围、兼容性及验证状态；不要把计划写成完成事实。
 
@@ -167,6 +168,14 @@
 - 保留：Charter 产品不变量、暖纸视觉、路由语义；OAuth MCP 同意页仍不挂载于自托管 API；Next.js/Auth.js npm 仍为独立迁移目标文档，不在本仓库替换当前 Fastify 会话。
 - 验证通过：`npm test`、`npm run build:server`、`npm run build`、`npm run lint`、`npm run typecheck`。
 - 未验证：Docker 全栈生产部署、真实 TLS cookie、跨账号权限、六语言登录文案回归、全站业务保存路径。
+
+### M5 实施：2026-10-29 — HTTP 可观测性与策略隔离
+
+- 完成：`server/http` 请求 ID 与结构化 API 访问日志；`/api/*` 与 `/health` 返回 `x-request-id` 与 `Cache-Control: no-store`；404/错误处理器与 auth 路由错误体附带 `requestId`；`ApiClientError` 保留 `requestId` 供排查。
+- 完成：Vitest 拆分为单元与 PGlite 集成两套配置，共享 `server/tests/integration/setup.js`；集成测试覆盖 auth、HTTP 契约、PinnedPeer 跨用户不可见/不可删、ChatMessage 必须走 workflow。
+- 保留：成功 JSON 响应不包裹 envelope，避免破坏现有 React 客户端；Charter 产品行为与路由语义不变。
+- 验证通过：`npm test`（20 项）、lint、typecheck、build、build:server。
+- 未验证：生产日志聚合、全实体权限矩阵、六语言与全站业务回归。
 
 ### 第一轮实施：2026-10-03 — 首页展示边界与移动标题
 

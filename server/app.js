@@ -13,6 +13,8 @@ import { resolveSession, tokenFromRequest } from './auth/session.js';
 import { entityRoutes } from './entities/routes.js';
 import { functionRoutes } from './functions/routes.js';
 import { storageRoutes } from './storage/routes.js';
+import { actorRoleFromRequest, logApiRequest } from './http/log.js';
+import { readOrCreateRequestId } from './http/requestId.js';
 
 export async function buildApp(options = {}) {
   const app = Fastify({
@@ -35,8 +37,32 @@ export async function buildApp(options = {}) {
   });
 
   app.decorateRequest('user', null);
+  app.decorateRequest('requestId', null);
+  app.decorateRequest('requestStartedAt', null);
+
+  app.addHook('onRequest', async (request, reply) => {
+    request.requestId = readOrCreateRequestId(request.headers['x-request-id']);
+    request.requestStartedAt = Date.now();
+    reply.header('x-request-id', request.requestId);
+    reply.header('Cache-Control', 'no-store');
+  });
+
   app.addHook('preHandler', async (request) => {
     request.user = await resolveSession(tokenFromRequest(request));
+  });
+
+  app.addHook('onResponse', async (request, reply) => {
+    if (!request.url.startsWith('/api/') && request.url !== '/health') return;
+    const errorPayload = reply.getHeader('x-error-code');
+    logApiRequest(request.log, {
+      requestId: request.requestId,
+      route: request.url,
+      method: request.method,
+      status: reply.statusCode,
+      durationMs: Date.now() - (request.requestStartedAt || Date.now()),
+      actorRole: actorRoleFromRequest(request),
+      errorCode: typeof errorPayload === 'string' ? errorPayload : null,
+    });
   });
 
   const health = async (_request, reply) => {
@@ -71,9 +97,16 @@ export async function buildApp(options = {}) {
     await app.register(staticFiles, { root: dist, wildcard: false });
   }
 
+  const apiErrorBody = (request, code, message) => ({
+    error: code,
+    message,
+    requestId: request.requestId,
+  });
+
   app.setNotFoundHandler(async (request, reply) => {
     if (request.url.startsWith('/api/') || request.url === '/health') {
-      return reply.code(404).send({ error: 'not_found', message: 'Route not found' });
+      reply.header('x-error-code', 'not_found');
+      return reply.code(404).send(apiErrorBody(request, 'not_found', 'Route not found'));
     }
     if (hasDist && request.method === 'GET') {
       reply.type('text/html');
@@ -83,11 +116,14 @@ export async function buildApp(options = {}) {
   });
 
   app.setErrorHandler((error, request, reply) => {
-    request.log.error({ err: error }, 'request failed');
+    request.log.error({ err: error, request_id: request.requestId }, 'request failed');
     const status = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
+    const code = error.code || (status === 500 ? 'internal_error' : 'request_failed');
+    reply.header('x-error-code', code);
     return reply.code(status).send({
-      error: error.code || (status === 500 ? 'internal_error' : 'request_failed'),
+      error: code,
       message: status === 500 && config.production ? 'Internal server error' : error.message,
+      requestId: request.requestId,
     });
   });
 

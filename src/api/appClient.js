@@ -9,12 +9,13 @@ import { appParams, tokenStore } from '@/lib/app-params';
  */
 
 class ApiClientError extends Error {
-  constructor(message, { status = 500, data = null, url = '' } = {}) {
+  constructor(message, { status = 500, data = null, url = '', requestId = null } = {}) {
     super(message);
     this.name = 'ApiClientError';
     this.status = status;
     this.data = data;
     this.url = url;
+    this.requestId = requestId || data?.requestId || null;
     // Preserve axios-like access for older catch blocks.
     this.response = { status, data };
   }
@@ -102,7 +103,12 @@ const request = async (path, { method = 'GET', body, headers = {}, credentials =
   if (!response.ok) {
     throw new ApiClientError(
       data?.message || data?.error || `Request failed (${response.status})`,
-      { status: response.status, data, url: toUrl(path) },
+      {
+        status: response.status,
+        data,
+        url: toUrl(path),
+        requestId: data?.requestId || response.headers.get('x-request-id'),
+      },
     );
   }
   if (response.status !== 204 && data === null) {

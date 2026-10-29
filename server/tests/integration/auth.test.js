@@ -1,44 +1,9 @@
-import { readFile } from 'node:fs/promises';
-import { PGlite } from '@electric-sql/pglite';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-
-const dbState = vi.hoisted(() => ({ database: null }));
-
-vi.mock('../db/pool.js', () => ({
-  pool: {
-    query: (...args) => dbState.database.query(...args),
-    connect: async () => ({
-      query: (...args) => dbState.database.query(...args),
-      release: () => {},
-    }),
-  },
-  withTransaction: async (callback) => {
-    await dbState.database.query('BEGIN');
-    try {
-      const result = await callback({
-        query: (...args) => dbState.database.query(...args),
-      });
-      await dbState.database.query('COMMIT');
-      return result;
-    } catch (error) {
-      await dbState.database.query('ROLLBACK');
-      throw error;
-    }
-  },
-  closePool: async () => dbState.database.close(),
-}));
+import { beforeAll, describe, expect, it } from 'vitest';
 
 let buildApp;
 
 beforeAll(async () => {
-  dbState.database = new PGlite();
-  const migration = await readFile(new URL('../db/migrations/001_initial.sql', import.meta.url), 'utf8');
-  await dbState.database.exec(migration);
-  ({ buildApp } = await import('../app.js'));
-});
-
-afterAll(async () => {
-  await dbState.database.close();
+  ({ buildApp } = await import('../../app.js'));
 });
 
 describe('auth HTTP routes', () => {
@@ -55,6 +20,7 @@ describe('auth HTTP routes', () => {
       },
     });
     expect(register.statusCode).toBe(200);
+    expect(register.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/i);
     const registerBody = register.json();
     expect(registerBody.user.email).toBe('listener@example.com');
     expect(registerBody.access_token).toMatch(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
@@ -80,6 +46,7 @@ describe('auth HTTP routes', () => {
       headers: { authorization: `Bearer ${registerBody.access_token}` },
     });
     expect(meAfterLogout.statusCode).toBe(401);
+    expect(meAfterLogout.json().requestId).toBeTruthy();
 
     await app.close();
   });
