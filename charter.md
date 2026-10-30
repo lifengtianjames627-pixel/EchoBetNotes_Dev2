@@ -158,6 +158,7 @@
 | 2026-10-03 | 将 Next.js 作为后续独立迁移目标 | 当前 React + Vite 继续保持可用 |
 | 2026-10-14 | M4：自托管认证边界 refinement 与站点 construction 收尾 | Fastify `server/auth` 凭证解析与会话；前端 AuthContext/Login 对齐 cookie+bearer；`.env.example` 与本地 PostgreSQL compose；认证契约测试；不引入 Auth.js npm 包 |
 | 2026-10-29 | M5：HTTP 可观测性与策略隔离测试 | `x-request-id` 与结构化 API 日志；错误响应附带 `requestId`；Vitest 单元/集成分离；PinnedPeer 跨账号隔离与 workflow-only 写入集成测试；成功响应形状不变 |
+| 2026-10-30 | M6：实体策略矩阵与 API 错误契约 | Subscription/FriendRequest/Review/ReviewVote 集成策略测试；`sendApiError`/`withApiErrors` 统一 policy 错误 JSON；共享 integration helpers；集成测试串行执行 |
 
 后续记录应写明日期、原因、影响范围、兼容性及验证状态；不要把计划写成完成事实。
 
@@ -176,6 +177,14 @@
 - 保留：成功 JSON 响应不包裹 envelope，避免破坏现有 React 客户端；Charter 产品行为与路由语义不变。
 - 验证通过：`npm test`（20 项）、lint、typecheck、build、build:server。
 - 未验证：生产日志聚合、全实体权限矩阵、六语言与全站业务回归。
+
+### M6 实施：2026-10-30 — 实体策略矩阵与 API 错误契约
+
+- 完成：集成测试矩阵扩展至 Subscription（订阅归属绑定与跨用户删除拒绝）、FriendRequest（必须走 `friendRequests` 工作流、仅接收方可接受）、Review（待审对他人不可见、非作者不可改）、ReviewVote（必须走 `voteReview`、投票记录仅投票者可见）；共享 `integration/helpers.js`。
+- 完成：`sendApiError` 与 entity/function 路由 `withApiErrors`，policy 抛出的 `HttpError` 不再被 Fastify 默认序列化成 `error: "Forbidden"`；错误体稳定包含 `requestId`。
+- 完成：单元测试补充 Subscription 归属绑定、workflow-only 实体、`sendApiError` 形状；集成套件 `fileParallelism: false` 避免 PGlite 并行竞态。
+- 验证通过：`npm test`（25 项）、lint、typecheck、build、build:server。
+- 未验证：Notification/ChatMessage 工作流全路径、用户 ID 公开链接迁移、普通成员与游客的全站手动回归。
 
 ### 第一轮实施：2026-10-03 — 首页展示边界与移动标题
 
