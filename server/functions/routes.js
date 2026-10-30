@@ -1,5 +1,6 @@
 import { functionRegistry } from './index.js';
 import { HttpError } from '../entities/policies.js';
+import { withApiErrors } from '../http/sendError.js';
 
 const parseValue = (value) => {
   if (typeof value !== 'string') return value;
@@ -35,9 +36,9 @@ async function functionPayload(request) {
 }
 
 export async function functionRoutes(app) {
-  app.post('/api/functions/:name', async (request, reply) => {
+  app.post('/api/functions/:name', withApiErrors(async (request, reply) => {
     const handler = functionRegistry[request.params.name];
     if (!handler) throw new HttpError(404, 'unknown_function', 'Unknown workflow');
     return handler({ user: request.user, request, reply }, await functionPayload(request));
-  });
+  }));
 }

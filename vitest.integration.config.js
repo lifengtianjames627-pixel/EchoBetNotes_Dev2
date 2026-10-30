@@ -4,5 +4,6 @@ export default defineConfig({
   test: {
     include: ['server/tests/integration/**/*.test.js'],
     setupFiles: ['./server/tests/integration/setup.js'],
+    fileParallelism: false,
   },
 });

@@ -1,20 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { bearer, registerMember } from './helpers.js';
 
 let buildApp;
-
-async function registerMember(app, suffix) {
-  const response = await app.inject({
-    method: 'POST',
-    url: '/api/auth/register',
-    payload: {
-      email: `${suffix}@example.com`,
-      password: 'correct-horse-battery',
-      displayName: suffix,
-    },
-  });
-  const body = response.json();
-  return { token: body.access_token, user: body.user };
-}
 
 beforeAll(async () => {
   ({ buildApp } = await import('../../app.js'));
@@ -29,7 +16,7 @@ describe('entity policy isolation', () => {
     const created = await app.inject({
       method: 'POST',
       url: '/api/entities/PinnedPeer',
-      headers: { authorization: `Bearer ${owner.token}` },
+      headers: bearer(owner.token),
       payload: {
         peer_email: 'peer@example.com',
         peer_name: 'Peer',
@@ -41,7 +28,7 @@ describe('entity policy isolation', () => {
     const ownerList = await app.inject({
       method: 'POST',
       url: '/api/entities/PinnedPeer/filter',
-      headers: { authorization: `Bearer ${owner.token}` },
+      headers: bearer(owner.token),
       payload: { filter: { owner_email: owner.user.email }, limit: 10 },
     });
     expect(ownerList.json()).toHaveLength(1);
@@ -49,7 +36,7 @@ describe('entity policy isolation', () => {
     const otherList = await app.inject({
       method: 'POST',
       url: '/api/entities/PinnedPeer/filter',
-      headers: { authorization: `Bearer ${other.token}` },
+      headers: bearer(other.token),
       payload: { filter: { owner_email: owner.user.email }, limit: 10 },
     });
     expect(otherList.json()).toHaveLength(0);
@@ -57,15 +44,16 @@ describe('entity policy isolation', () => {
     const deleteAttempt = await app.inject({
       method: 'DELETE',
       url: `/api/entities/PinnedPeer/${pinId}`,
-      headers: { authorization: `Bearer ${other.token}` },
+      headers: bearer(other.token),
     });
     expect(deleteAttempt.statusCode).toBe(403);
+    expect(deleteAttempt.json().error).toBe('forbidden');
     expect(deleteAttempt.json().requestId).toBeTruthy();
 
     const chatWrite = await app.inject({
       method: 'POST',
       url: '/api/entities/ChatMessage',
-      headers: { authorization: `Bearer ${owner.token}` },
+      headers: bearer(owner.token),
       payload: { content: 'hello' },
     });
     expect(chatWrite.statusCode).toBe(403);

@@ -28,7 +28,16 @@ describe('entity authorization policies', () => {
   it('binds owner fields to the authenticated actor', () => {
     expect(prepareEntityInput('PinnedPeer', member, { owner_email: 'other@example.com' }).owner_email)
       .toBe(member.email);
+    expect(prepareEntityInput('Subscription', member, { subscriber_email: 'other@example.com' }).subscriber_email)
+      .toBe(member.email);
     expect(prepareEntityInput('RecruitPost', member, {}).moderation_status)
       .toBe('pending_review');
+  });
+
+  it('requires workflow endpoints for friend requests and review votes', () => {
+    expect(() => assertEntityOperation('FriendRequest', 'create', member, null, {}))
+      .toThrowError(/workflow/i);
+    expect(() => assertEntityOperation('ReviewVote', 'create', member, null, {}))
+      .toThrowError(/workflow/i);
   });
 });
