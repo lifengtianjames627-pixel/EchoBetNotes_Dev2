@@ -84,7 +84,9 @@ An optional OpenAI-compatible JSON endpoint can be configured with `LLM_API_URL`
 - `npm run build:server` — backend syntax validation
 - `npm run db:migrate` — apply pending PostgreSQL migrations
 - `npm run start` — migrate and run the production full-stack server
-- `npm test` — backend/unit tests
+- `npm test` — unit tests plus PGlite integration tests
+- `npm run test:unit` — policies, repository, HTTP helpers only
+- `npm run test:integration` — auth, observability, and policy isolation against PGlite
 - `npm run typecheck` — JavaScript/TypeScript checking
 - `npm run lint` — lint checks
 

@@ -17,6 +17,9 @@ const cookieOptions = {
   maxAge: config.sessionDays * 86_400,
 };
 
+const authError = (request, reply, statusCode, code, message) =>
+  reply.code(statusCode).send({ error: code, message, requestId: request.requestId });
+
 const sendSession = async (reply, user) => {
   const session = await issueSession(user);
   reply.setCookie('session', session.token, cookieOptions);
@@ -27,7 +30,9 @@ export async function authRoutes(app) {
   app.post('/api/auth/register', {
     config: { rateLimit: { max: 10, timeWindow: '1 hour' } },
   }, async (request, reply) => {
-    if (!config.allowRegistration) return reply.code(403).send({ error: 'registration_disabled' });
+    if (!config.allowRegistration) {
+      return authError(request, reply, 403, 'registration_disabled', 'Registration is disabled');
+    }
     const user = await createAccount(request.body || {});
     return sendSession(reply, user);
   });
@@ -40,12 +45,16 @@ export async function authRoutes(app) {
   });
 
   app.get('/api/auth/me', async (request, reply) => {
-    if (!request.user) return reply.code(401).send({ error: 'auth_required', message: 'Authentication required' });
+    if (!request.user) {
+      return authError(request, reply, 401, 'auth_required', 'Authentication required');
+    }
     return request.user;
   });
 
   app.patch('/api/auth/me', async (request, reply) => {
-    if (!request.user) return reply.code(401).send({ error: 'auth_required', message: 'Authentication required' });
+    if (!request.user) {
+      return authError(request, reply, 401, 'auth_required', 'Authentication required');
+    }
     const blocked = new Set(['id', 'email', 'role', 'created_date', 'created_by_id']);
     const changes = Object.fromEntries(
       Object.entries(request.body || {}).filter(([key]) => !blocked.has(key)),
