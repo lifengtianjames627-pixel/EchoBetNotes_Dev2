@@ -6,6 +6,7 @@ import {
   canReadRecord,
   prepareEntityInput,
 } from './policies.js';
+import { withApiErrors } from '../http/sendError.js';
 
 const decodeCursor = (cursor) => {
   if (!cursor) return 0;
@@ -26,7 +27,7 @@ const visibleRecords = (name, actor, records) =>
   records.filter((record) => canReadRecord(name, actor, record));
 
 export async function entityRoutes(app) {
-  app.get('/api/entities/:name', async (request) => {
+  app.get('/api/entities/:name', withApiErrors(async (request) => {
     const { name } = request.params;
     requireDefinition(name);
     if (definitions[name].policy.read === 'admin' && request.user?.role !== 'admin') {
@@ -38,9 +39,9 @@ export async function entityRoutes(app) {
       offset: decodeCursor(request.query.cursor),
     });
     return visibleRecords(name, request.user, records);
-  });
+  }));
 
-  app.post('/api/entities/:name/filter', async (request) => {
+  app.post('/api/entities/:name/filter', withApiErrors(async (request) => {
     const { name } = request.params;
     requireDefinition(name);
     if (definitions[name].policy.read === 'admin' && request.user?.role !== 'admin') {
@@ -63,17 +64,17 @@ export async function entityRoutes(app) {
       has_more: hasMore,
       next_cursor: hasMore ? encodeCursor(offset + limit) : undefined,
     };
-  });
+  }));
 
-  app.post('/api/entities/:name', async (request) => {
+  app.post('/api/entities/:name', withApiErrors(async (request) => {
     const { name } = request.params;
     requireDefinition(name);
     const input = prepareEntityInput(name, request.user, request.body || {});
     assertEntityOperation(name, 'create', request.user, null, input);
     return entity(name).create(input, request.user);
-  });
+  }));
 
-  app.patch('/api/entities/:name/:id', async (request) => {
+  app.patch('/api/entities/:name/:id', withApiErrors(async (request) => {
     const { name, id } = request.params;
     requireDefinition(name);
     const current = await entity(name).find(id);
@@ -85,9 +86,9 @@ export async function entityRoutes(app) {
       delete changes.email;
     }
     return entity(name).update(id, changes);
-  });
+  }));
 
-  app.delete('/api/entities/:name/:id', async (request) => {
+  app.delete('/api/entities/:name/:id', withApiErrors(async (request) => {
     const { name, id } = request.params;
     requireDefinition(name);
     const current = await entity(name).find(id);
@@ -95,9 +96,9 @@ export async function entityRoutes(app) {
     assertEntityOperation(name, 'delete', request.user, current);
     await entity(name).remove(id);
     return { ok: true };
-  });
+  }));
 
-  app.post('/api/entities/:name/aggregate', async (request) => {
+  app.post('/api/entities/:name/aggregate', withApiErrors(async (request) => {
     const { name } = request.params;
     requireDefinition(name);
     const records = visibleRecords(name, request.user, await entity(name).list({ limit: 1000 }));
@@ -112,5 +113,5 @@ export async function entityRoutes(app) {
       grouped.set(key, current);
     }
     return { rows: [...grouped.values()] };
-  });
+  }));
 }

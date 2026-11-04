@@ -15,6 +15,7 @@ import { functionRoutes } from './functions/routes.js';
 import { storageRoutes } from './storage/routes.js';
 import { actorRoleFromRequest, logApiRequest } from './http/log.js';
 import { readOrCreateRequestId } from './http/requestId.js';
+import { sendApiError } from './http/sendError.js';
 
 export async function buildApp(options = {}) {
   const app = Fastify({
@@ -117,14 +118,7 @@ export async function buildApp(options = {}) {
 
   app.setErrorHandler((error, request, reply) => {
     request.log.error({ err: error, request_id: request.requestId }, 'request failed');
-    const status = error.statusCode && error.statusCode >= 400 ? error.statusCode : 500;
-    const code = error.code || (status === 500 ? 'internal_error' : 'request_failed');
-    reply.header('x-error-code', code);
-    return reply.code(status).send({
-      error: code,
-      message: status === 500 && config.production ? 'Internal server error' : error.message,
-      requestId: request.requestId,
-    });
+    return sendApiError(reply, request, error);
   });
 
   return app;
