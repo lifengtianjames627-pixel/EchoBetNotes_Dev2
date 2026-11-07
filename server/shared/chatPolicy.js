@@ -10,22 +10,24 @@ const contactPatterns = [
 export const containsExternalContact = (text) =>
   contactPatterns.some((pattern) => pattern.test(String(text || '')));
 
+const chatError = (code) => Object.assign(new Error(code), { statusCode: 400, code });
+
 export function buildChatMessage(actor, payload) {
   const participants = String(payload.chat_id || '').split('|').map(normalizeEmail).filter(Boolean);
   if (participants.length !== 2 || !participants.includes(normalizeEmail(actor.email))) {
-    throw Object.assign(new Error('invalid_chat'), { statusCode: 400 });
+    throw chatError('invalid_chat');
   }
   if (payload.chat_id !== chatIdFor(...participants)) {
-    throw Object.assign(new Error('invalid_chat'), { statusCode: 400 });
+    throw chatError('invalid_chat');
   }
   const content = String(payload.content || '').trim();
   if (!content && !payload.attachment_url) {
-    throw Object.assign(new Error('invalid_message'), { statusCode: 400 });
+    throw chatError('invalid_message');
   }
-  if (content.length > 5000) throw Object.assign(new Error('invalid_message'), { statusCode: 400 });
-  if (containsExternalContact(content)) throw Object.assign(new Error('contact_blocked'), { statusCode: 400 });
+  if (content.length > 5000) throw chatError('invalid_message');
+  if (containsExternalContact(content)) throw chatError('contact_blocked');
   if (payload.attachment_kind && !['image', 'pdf', 'file'].includes(payload.attachment_kind)) {
-    throw Object.assign(new Error('invalid_attachment'), { statusCode: 400 });
+    throw chatError('invalid_attachment');
   }
   return {
     chat_id: payload.chat_id,
