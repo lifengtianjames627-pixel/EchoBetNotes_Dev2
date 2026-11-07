@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { HttpError } from '../entities/policies.js';
 import { buildChatMessage, lastSeenFor } from '../shared/chatPolicy.js';
 import { chatIdFor, normalizeEmail, onlineRecently, safeMemberName } from '../shared/identity.js';
+import { readBounds } from '../shared/readBounds.js';
 import { records, requireAdmin, requireUser } from './_helpers.js';
 
 const findUser = async ({ id, email }) => {
@@ -32,20 +33,20 @@ export async function searchUsers(context, payload) {
   const viewer = requireUser(context);
   const query = String(payload.query || '').trim().toLowerCase();
   if (query.length < 2 || query.length > 100 || query.includes('@')) return { results: [] };
-  const users = await records('User').list({ limit: 1000 });
+  const users = await records('User').list({ limit: readBounds.searchCandidates });
   return {
     results: users
       .filter((user) => user.id !== viewer.id && safeMemberName(user).toLowerCase().includes(query))
-      .slice(0, 10)
+      .slice(0, readBounds.searchResults)
       .map((user) => ({ id: user.id, full_name: safeMemberName(user) })),
   };
 }
 
 export async function resolveProfiles(context, payload) {
   requireUser(context);
-  const emails = [...new Set((payload.emails || []).map(normalizeEmail))].slice(0, 100);
+  const emails = [...new Set((payload.emails || []).map(normalizeEmail))].slice(0, readBounds.profileBatch);
   if (!emails.length) return { results: {} };
-  const users = await records('User').list({ filter: { email: { $in: emails } }, limit: 100 });
+  const users = await records('User').list({ filter: { email: { $in: emails } }, limit: readBounds.profileBatch });
   return {
     results: Object.fromEntries(users.map((user) => [
       normalizeEmail(user.email),
@@ -59,7 +60,7 @@ export async function getEquippedBadges(context, payload) {
   const profiles = await resolveProfiles(context, payload);
   const emails = Object.keys(profiles.results);
   const users = emails.length
-    ? await records('User').list({ filter: { email: { $in: emails } }, limit: 100 })
+    ? await records('User').list({ filter: { email: { $in: emails } }, limit: readBounds.profileBatch })
     : [];
   return { badges: Object.fromEntries(users.map((user) => [user.email, user.equipped_badges || []])) };
 }
@@ -92,7 +93,10 @@ export async function sendChatMessage(context, payload) {
 
 export async function messageUnread(context) {
   const user = requireUser(context);
-  const messages = await records('ChatMessage').list({ sort: '-created_date', limit: 1000 });
+  const messages = await records('ChatMessage').listArrayIncludes('participants', normalizeEmail(user.email), {
+    sort: '-created_date',
+    limit: readBounds.unreadMessages,
+  });
   const unread = messages.filter((message) => {
     if (!message.participants?.map(normalizeEmail).includes(normalizeEmail(user.email))) return false;
     if (normalizeEmail(message.sender_email) === normalizeEmail(user.email)) return false;
@@ -103,7 +107,10 @@ export async function messageUnread(context) {
 
 export async function chatDirectory(context) {
   const user = requireUser(context);
-  const messages = await records('ChatMessage').list({ sort: '-created_date', limit: 500 });
+  const messages = await records('ChatMessage').listArrayIncludes('participants', normalizeEmail(user.email), {
+    sort: '-created_date',
+    limit: readBounds.directoryMessages,
+  });
   const relevant = messages.filter((message) => message.participants?.map(normalizeEmail).includes(normalizeEmail(user.email)));
   const conversations = new Map();
   for (const message of relevant) {
@@ -119,10 +126,10 @@ export async function chatDirectory(context) {
         && new Date(message.created_date).getTime() > lastSeenFor(user, peer),
     });
   }
-  const users = await records('User').list({ limit: 1000 });
+  const users = await records('User').list({ limit: readBounds.searchCandidates });
   const nearby = users
     .filter((candidate) => candidate.id !== user.id)
-    .slice(0, 16)
+    .slice(0, readBounds.directoryPeople)
     .map((candidate) => ({
       id: candidate.id,
       email: candidate.email,
@@ -133,7 +140,7 @@ export async function chatDirectory(context) {
     }));
   await records('User').update(user.id, { last_active: new Date().toISOString() });
   return {
-    conversations: [...conversations.values()].slice(0, 25),
+    conversations: [...conversations.values()].slice(0, readBounds.directoryConversations),
     nearby,
     located: false,
     network_active: false,
@@ -189,7 +196,7 @@ export async function notifications(context, payload) {
     const items = await records('Notification').list({
       filter: { owner_email: user.email },
       sort: '-created_date',
-      limit: 100,
+      limit: readBounds.notificationList,
     });
     return { items, unread: items.filter((item) => !item.read).length };
   }
