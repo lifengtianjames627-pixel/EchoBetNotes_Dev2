@@ -161,6 +161,7 @@
 | 2026-10-30 | M6：实体策略矩阵与 API 错误契约 | Subscription/FriendRequest/Review/ReviewVote 集成策略测试；`sendApiError`/`withApiErrors` 统一 policy 错误 JSON；共享 integration helpers；集成测试串行执行 |
 | 2026-11-07 | M7：公开浏览保持，私有集合必须登录 | 游客仍可读已通过审核的乐评；聊天、用户、投票、订阅、置顶的集合读取匿名返回 401；搜索不返回邮箱；已登录资料接口继续返回邮箱以兼容私信与好友；聊天校验错误码与原提示一致 |
 | 2026-11-07 | M8：私信扫描只取本人参与的记录 | 未读数和会话目录按参与者查询，不再先取全站最新消息再过滤；搜索、资料批量、通知列表沿用原有条数上限并集中命名；附近成员列表与邮箱字段保持原样 |
+| 2026-11-07 | 部署：内置数据库不强制 TLS，认证错误使用同一 JSON | Compose 对自带 Postgres 设置 DATABASE_SSL=false；错误处理器在路由注册前挂上，登录失败返回 invalid_credentials 而不是 Fastify 默认的 Unauthorized |
 
 后续记录应写明日期、原因、影响范围、兼容性及验证状态；不要把计划写成完成事实。
 
