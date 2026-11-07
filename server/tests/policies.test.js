@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assertEntityOperation, canReadRecord, prepareEntityInput } from '../entities/policies.js';
+import { assertCollectionRead, assertEntityOperation, canReadRecord, prepareEntityInput } from '../entities/policies.js';
 
 const member = { id: '111111111111111111111111', email: 'member@example.com', role: 'user' };
 const admin = { id: '222222222222222222222222', email: 'admin@example.com', role: 'admin' };
@@ -32,6 +32,12 @@ describe('entity authorization policies', () => {
       .toBe(member.email);
     expect(prepareEntityInput('RecruitPost', member, {}).moderation_status)
       .toBe('pending_review');
+  });
+
+  it('asks anonymous callers to sign in before private collections', () => {
+    expect(() => assertCollectionRead('ChatMessage', null)).toThrowError(/Authentication required/);
+    expect(() => assertCollectionRead('Review', null)).not.toThrow();
+    expect(() => assertCollectionRead('Notification', null)).toThrowError(/forbidden/);
   });
 
   it('requires workflow endpoints for friend requests and review votes', () => {

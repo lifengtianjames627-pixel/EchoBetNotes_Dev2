@@ -24,6 +24,26 @@ const moderated = (actor, record) =>
   || !record?.moderation_status
   || record.moderation_status === 'approved';
 
+const PRIVATE_COLLECTION_READS = new Set([
+  'participant',
+  'selfOrAdmin',
+  'ownerByEmail',
+  'voterOrAdmin',
+  'subscriberOrAdmin',
+]);
+
+export function assertCollectionRead(entityName, actor) {
+  const definition = definitions[entityName];
+  if (!definition) throw new HttpError(404, 'unknown_entity', 'Unknown entity');
+  const mode = definition.policy.read;
+  if (mode === 'admin' && !isAdmin(actor)) {
+    throw new HttpError(actor ? 403 : 401, 'forbidden');
+  }
+  if (PRIVATE_COLLECTION_READS.has(mode) && !actor) {
+    throw new HttpError(401, 'auth_required', 'Authentication required');
+  }
+}
+
 export function canReadRecord(entityName, actor, record) {
   const mode = definitions[entityName]?.policy.read;
   switch (mode) {

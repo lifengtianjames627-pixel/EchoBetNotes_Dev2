@@ -2,6 +2,7 @@ import { definitions } from './definitions/index.js';
 import { entity } from './repository.js';
 import {
   HttpError,
+  assertCollectionRead,
   assertEntityOperation,
   canReadRecord,
   prepareEntityInput,
@@ -30,9 +31,7 @@ export async function entityRoutes(app) {
   app.get('/api/entities/:name', withApiErrors(async (request) => {
     const { name } = request.params;
     requireDefinition(name);
-    if (definitions[name].policy.read === 'admin' && request.user?.role !== 'admin') {
-      throw new HttpError(request.user ? 403 : 401, 'forbidden');
-    }
+    assertCollectionRead(name, request.user);
     const records = await entity(name).list({
       sort: request.query.sort,
       limit: request.query.limit,
@@ -44,9 +43,7 @@ export async function entityRoutes(app) {
   app.post('/api/entities/:name/filter', withApiErrors(async (request) => {
     const { name } = request.params;
     requireDefinition(name);
-    if (definitions[name].policy.read === 'admin' && request.user?.role !== 'admin') {
-      throw new HttpError(request.user ? 403 : 401, 'forbidden');
-    }
+    assertCollectionRead(name, request.user);
     const body = request.body || {};
     const paged = Object.hasOwn(body, 'cursor');
     const offset = paged ? decodeCursor(body.cursor) : Number(body.offset || 0);

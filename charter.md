@@ -159,6 +159,7 @@
 | 2026-10-14 | M4：自托管认证边界 refinement 与站点 construction 收尾 | Fastify `server/auth` 凭证解析与会话；前端 AuthContext/Login 对齐 cookie+bearer；`.env.example` 与本地 PostgreSQL compose；认证契约测试；不引入 Auth.js npm 包 |
 | 2026-10-29 | M5：HTTP 可观测性与策略隔离测试 | `x-request-id` 与结构化 API 日志；错误响应附带 `requestId`；Vitest 单元/集成分离；PinnedPeer 跨账号隔离与 workflow-only 写入集成测试；成功响应形状不变 |
 | 2026-10-30 | M6：实体策略矩阵与 API 错误契约 | Subscription/FriendRequest/Review/ReviewVote 集成策略测试；`sendApiError`/`withApiErrors` 统一 policy 错误 JSON；共享 integration helpers；集成测试串行执行 |
+| 2026-11-07 | M7：公开浏览保持，私有集合必须登录 | 游客仍可读已通过审核的乐评；聊天、用户、投票、订阅、置顶的集合读取匿名返回 401；搜索不返回邮箱；已登录资料接口继续返回邮箱以兼容私信与好友；聊天校验错误码与原提示一致 |
 
 后续记录应写明日期、原因、影响范围、兼容性及验证状态；不要把计划写成完成事实。
 
@@ -185,6 +186,15 @@
 - 完成：单元测试补充 Subscription 归属绑定、workflow-only 实体、`sendApiError` 形状；集成套件 `fileParallelism: false` 避免 PGlite 并行竞态。
 - 验证通过：`npm test`（25 项）、lint、typecheck、build、build:server。
 - 未验证：Notification/ChatMessage 工作流全路径、用户 ID 公开链接迁移、普通成员与游客的全站手动回归。
+
+### M7 实施：2026-11-07 — 公开浏览保持，私有集合必须登录
+
+- 完成：`assertCollectionRead` 在查询前拦截匿名访问。游客仍可读取已通过审核的乐评；聊天、用户、投票、订阅和置顶集合改为 401，避免先扫描再滤空。
+- 完成：聊天校验错误带上稳定 `code`（`contact_blocked`、`invalid_chat` 等），原消息页仍按该代码显示拦截、次数和成员不可用提示。
+- 完成：集成测试锁定昵称搜索不含邮箱、邮箱查询被拒绝、已登录 `publicProfile` 仍返回对方邮箱（私信与资料兼容）、非参与者读不到私信、陌生人通知不能标已读、系统通知仅管理员可发。
+- 保留：路由、视觉、邮箱关联的聊天地址和好友关系；不把公开资料改成用户 ID。
+- 验证通过：`npm test`（30 项）、lint、typecheck、build、build:server。
+- 未验证：真实浏览器私信界面、超过扫描上限的历史消息、六语言文案。
 
 ### 第一轮实施：2026-10-03 — 首页展示边界与移动标题
 
