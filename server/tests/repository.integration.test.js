@@ -35,4 +35,12 @@ describe('PostgreSQL entity repository', () => {
     expect(await albums.remove(first.id)).toBe(true);
     expect(await albums.find(first.id)).toBeNull();
   });
+
+  it('reads only the rows whose participant list contains the member', async () => {
+    const messages = new EntityRepository('ChatMessage', database);
+    await messages.create({ participants: ['a@example.com', 'b@example.com'], content: 'ours' });
+    await messages.create({ participants: ['c@example.com', 'd@example.com'], content: 'theirs' });
+    const mine = await messages.listArrayIncludes('participants', 'b@example.com', { limit: 10 });
+    expect(mine.map((message) => message.content)).toEqual(['ours']);
+  });
 });

@@ -84,6 +84,24 @@ export class EntityRepository {
     return result.rows.map(rowToRecord);
   }
 
+  async listArrayIncludes(field, value, { sort = '-created_date', limit = 100 } = {}) {
+    if (field !== 'participants') throw new Error('Invalid filter field');
+    const values = [this.entityName, String(value)];
+    const descending = String(sort || '').startsWith('-');
+    const sortField = String(sort || 'created_date').replace(/^-/, '');
+    const sortExpression = fieldExpression(sortField);
+    values.push(Math.min(Math.max(Number(limit) || 100, 1), 1000));
+    const result = await this.db.query(
+      `SELECT id, data, owner_id, created_date, updated_date
+       FROM entity_records
+       WHERE entity_name = $1 AND data->'participants' ? $2
+       ORDER BY ${sortExpression} ${descending ? 'DESC' : 'ASC'}, id ${descending ? 'DESC' : 'ASC'}
+       LIMIT $3`,
+      values,
+    );
+    return result.rows.map(rowToRecord);
+  }
+
   async find(id) {
     const result = await this.db.query(
       `SELECT id, data, owner_id, created_date, updated_date

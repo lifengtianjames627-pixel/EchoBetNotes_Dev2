@@ -51,6 +51,11 @@ describe('chat and notification privacy', () => {
     const carolUnread = await invokeFunction(app, carol.token, 'messageUnread', {});
     expect(carolUnread.json().unread).toBe(0);
 
+    const directory = await invokeFunction(app, bob.token, 'chatDirectory', {});
+    expect(directory.json().conversations.some((item) => item.peer_email === alice.user.email)).toBe(true);
+    const carolDirectory = await invokeFunction(app, carol.token, 'chatDirectory', {});
+    expect(carolDirectory.json().conversations).toEqual([]);
+
     await app.close();
   });
 
