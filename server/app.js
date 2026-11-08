@@ -24,6 +24,11 @@ export async function buildApp(options = {}) {
     bodyLimit: 55 * 1024 * 1024,
   });
 
+  app.setErrorHandler((error, request, reply) => {
+    request.log.error({ err: error, request_id: request.requestId }, 'request failed');
+    sendApiError(reply, request, error);
+  });
+
   await app.register(cookie);
   await app.register(multipart, {
     limits: { fileSize: 50 * 1024 * 1024, files: 2, fields: 100 },
@@ -114,11 +119,6 @@ export async function buildApp(options = {}) {
       return reply.send(await readFile(path.join(dist, 'index.html')));
     }
     return reply.code(404).send({ error: 'not_found' });
-  });
-
-  app.setErrorHandler((error, request, reply) => {
-    request.log.error({ err: error, request_id: request.requestId }, 'request failed');
-    return sendApiError(reply, request, error);
   });
 
   return app;

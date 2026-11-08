@@ -68,6 +68,8 @@ describe('auth HTTP routes', () => {
       payload: { email: payload.email, password: 'wrong-password-value' },
     });
     expect(login.statusCode).toBe(401);
+    expect(login.json().error).toBe('invalid_credentials');
+    expect(login.json().message).toBe('Invalid email or password');
 
     await app.close();
   });

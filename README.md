@@ -97,8 +97,15 @@ export POSTGRES_PASSWORD='use-a-secret-manager'
 export JWT_SECRET='generate-at-least-32-random-characters'
 export PUBLIC_BASE_URL='https://music.example.com'
 export ALLOWED_ORIGINS='https://music.example.com'
+export COOKIE_SECURE='true'
+export ALLOW_REGISTRATION='true'
+export BOOTSTRAP_ADMIN_EMAIL='admin@music.example.com'
 docker compose -f deploy/docker-compose.yml up --build -d
 ```
+
+The bundled Postgres container does not speak TLS. Compose sets `DATABASE_SSL=false` for that connection. Set `DATABASE_SSL=true` only when `DATABASE_URL` points at a database that requires TLS.
+
+Create the first account by registering `BOOTSTRAP_ADMIN_EMAIL` while `ALLOW_REGISTRATION=true`. That account receives the admin role. Then set `ALLOW_REGISTRATION=false` and recreate the website container. Set `COOKIE_SECURE=true` when the site is served over HTTPS. Leave it false only for a local HTTP boot.
 
 The production container:
 
@@ -108,7 +115,7 @@ The production container:
 4. serves the SPA and API from one origin;
 5. persists PostgreSQL data and local uploads through named volumes.
 
-For production media, configure an S3-compatible private bucket instead of the local uploads volume. Place TLS at your ingress/load balancer or use the optional nginx reverse-proxy configuration.
+For production media, configure an S3-compatible private bucket instead of the local uploads volume. Place TLS at your ingress/load balancer or use the optional nginx reverse-proxy configuration. Back up the `postgres-data` volume, or the managed database, before going live.
 
 ## HTTP API
 
