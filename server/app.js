@@ -20,7 +20,7 @@ import { sendApiError } from './http/sendError.js';
 export async function buildApp(options = {}) {
   const app = Fastify({
     logger: options.logger ?? { level: config.production ? 'info' : 'warn' },
-    trustProxy: true,
+    trustProxy: 1,
     bodyLimit: 55 * 1024 * 1024,
   });
 
@@ -51,6 +51,9 @@ export async function buildApp(options = {}) {
     request.requestStartedAt = Date.now();
     reply.header('x-request-id', request.requestId);
     reply.header('Cache-Control', 'no-store');
+    reply.header('X-Content-Type-Options', 'nosniff');
+    reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+    reply.header('X-Frame-Options', 'DENY');
   });
 
   app.addHook('preHandler', async (request) => {

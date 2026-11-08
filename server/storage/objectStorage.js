@@ -21,9 +21,15 @@ const s3 = config.storageDriver === 's3'
     })
   : null;
 
-const safeKey = (key) => {
-  const normalized = path.posix.normalize(String(key || '')).replace(/^(\.\.\/)+/, '');
-  if (!normalized || normalized.startsWith('/') || normalized.includes('..')) throw new Error('Invalid storage key');
+export const safeKey = (key) => {
+  const raw = String(key || '');
+  if (!raw || raw.includes('\\') || raw.includes('\0') || raw.split('/').includes('..')) {
+    throw new Error('Invalid storage key');
+  }
+  const normalized = path.posix.normalize(raw).replace(/^(\.\/)+/, '');
+  if (!normalized || normalized.startsWith('/') || normalized.startsWith('..') || normalized.split('/').includes('..')) {
+    throw new Error('Invalid storage key');
+  }
   return normalized;
 };
 

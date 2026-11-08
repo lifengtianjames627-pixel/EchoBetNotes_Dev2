@@ -103,7 +103,9 @@ export async function editReview(context, payload) {
     || normalizeEmail(review.reviewer_email) === normalizeEmail(user.email);
   if (!author) throw new HttpError(403, 'forbidden');
   if ((payload.expected_edit || null) !== (review.edited_at || null)) throw new HttpError(409, 'conflict');
-  const changes = { ...(payload.changes || {}) };
+  const editable = ['title', 'content', 'rating', 'band_style', 'band_background', 'band_history', 'band_story', 'genre', 'hero_image_url', 'featured_albums'];
+  const changes = Object.fromEntries(editable.filter((key) => key in (payload.changes || {})).map((key) => [key, payload.changes[key]]));
+  if (Array.isArray(changes.featured_albums)) changes.featured_albums = changes.featured_albums.slice(0, 12);
   if (!String(changes.content || '').trim()) throw new HttpError(400, 'invalid_content');
   if (changes.rating !== undefined && (!Number.isFinite(Number(changes.rating)) || Number(changes.rating) < 1 || Number(changes.rating) > 5)) {
     throw new HttpError(400, 'invalid_rating');

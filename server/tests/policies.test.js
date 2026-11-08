@@ -32,6 +32,18 @@ describe('entity authorization policies', () => {
       .toBe(member.email);
     expect(prepareEntityInput('RecruitPost', member, {}).moderation_status)
       .toBe('pending_review');
+    const review = prepareEntityInput('Review', member, {
+      reviewer_email: 'other@example.com',
+      reviewer_name: 'Someone else',
+      likes_count: 40,
+      moderation_status: 'approved',
+    });
+    expect(review.reviewer_email).toBe(member.email);
+    expect(review.reviewer_name).toBe('Anonymous');
+    expect(review.likes_count).toBe(0);
+    expect(review.moderation_status).toBeUndefined();
+    expect(() => prepareEntityInput('UserBadge', member, { badge_id: 'not-a-badge', user_email: member.email }))
+      .toThrowError(/Unknown badge/);
   });
 
   it('asks anonymous callers to sign in before private collections', () => {

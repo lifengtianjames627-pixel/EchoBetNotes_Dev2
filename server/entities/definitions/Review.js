@@ -3,7 +3,7 @@ export default {
   "policy": {
     "read": "moderated",
     "create": "owner",
-    "update": "ownerOrAdmin",
+    "update": "functionOnly",
     "delete": "ownerOrAdmin"
   }
 };

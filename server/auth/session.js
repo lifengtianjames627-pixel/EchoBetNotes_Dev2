@@ -42,13 +42,17 @@ export async function createAccount(body) {
   });
 }
 
+const unknownAccountHash = '$2b$12$pg32OUgrr6zp.6BdRxDMSuNrpV2wqEtHkx6U34/6d6QXBenCUXuOa';
+
 export async function authenticateCredentials(email, password) {
   const normalizedEmail = normalizeEmail(email);
   const account = await pool.query(
     'SELECT user_id, password_hash FROM auth_accounts WHERE email = $1',
     [normalizedEmail],
   );
-  if (!account.rows[0] || !(await verifyPassword(password, account.rows[0].password_hash))) {
+  const hash = account.rows[0]?.password_hash || unknownAccountHash;
+  const matches = await verifyPassword(password, hash);
+  if (!account.rows[0] || !matches) {
     throw Object.assign(new Error('Invalid email or password'), { statusCode: 401, code: 'invalid_credentials' });
   }
   return entity('User').find(account.rows[0].user_id);

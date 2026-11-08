@@ -20,6 +20,8 @@ describe('HTTP observability', () => {
     expect(health.statusCode).toBe(200);
     expect(health.headers['x-request-id']).toBe(incoming);
     expect(health.headers['cache-control']).toBe('no-store');
+    expect(health.headers['x-content-type-options']).toBe('nosniff');
+    expect(health.headers['x-frame-options']).toBe('DENY');
     expect(health.json()).toMatchObject({ status: 'ok', checks: { database: 'ok' } });
 
     await app.close();
