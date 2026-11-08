@@ -212,15 +212,22 @@ export async function notifications(context, payload) {
   }
   if (action === 'create') {
     if (normalizeEmail(payload.owner_email) === normalizeEmail(user.email)) return { skipped: true };
-    if (['badge', 'ranking', 'system'].includes(payload.type) && user.role !== 'admin') {
+    const memberTypes = new Set(['follow', 'like', 'comment']);
+    if (!memberTypes.has(payload.type) && user.role !== 'admin') {
       throw new HttpError(403, 'forbidden');
     }
+    if (user.role === 'admin' && !memberTypes.has(payload.type) && !['badge', 'ranking', 'system'].includes(payload.type)) {
+      throw new HttpError(400, 'invalid_notification');
+    }
+    const recipient = await findUser({ email: payload.owner_email });
+    if (!recipient) throw new HttpError(404, 'member_unavailable');
+    const link = String(payload.link || '/');
     const notification = await records('Notification').create({
-      owner_email: normalizeEmail(payload.owner_email),
+      owner_email: recipient.email,
       type: payload.type,
       title: String(payload.title || '').slice(0, 200),
       body: String(payload.body || '').slice(0, 1000),
-      link: String(payload.link || '/').startsWith('/') ? payload.link : '/',
+      link: link.startsWith('/') && !link.startsWith('//') && !link.includes('\\') ? link.slice(0, 300) : '/',
       actor_name: safeMemberName(user),
       read: false,
     }, user);

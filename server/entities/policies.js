@@ -1,4 +1,6 @@
 import { definitions } from './definitions/index.js';
+import { BADGE_IDS } from '../shared/badgeIds.js';
+import { safeMemberName } from '../shared/identity.js';
 
 export class HttpError extends Error {
   constructor(statusCode, code, message = code) {
@@ -98,7 +100,32 @@ export function prepareEntityInput(entityName, actor, input) {
       next.author_email = actor.email;
       next.moderation_status = 'pending_review';
     }
+    if (entityName === 'Review') {
+      next.reviewer_email = actor.email;
+      next.reviewer_name = safeMemberName(actor);
+      next.likes_count = 0;
+      next.dislikes_count = 0;
+      delete next.moderation_status;
+      delete next.moderation_reason;
+      delete next.moderation_categories;
+      delete next.moderation_confidence;
+    }
+    if (entityName === 'Comment') {
+      next.author_email = actor.email;
+      next.author_name = safeMemberName(actor);
+      delete next.moderation_status;
+      delete next.moderation_reason;
+      delete next.moderation_categories;
+      delete next.moderation_confidence;
+    }
   }
   if (entityName === 'User') delete next.role;
+  if (entityName === 'UserBadge' && !BADGE_IDS.has(next.badge_id)) {
+    throw new HttpError(400, 'invalid_badge', 'Unknown badge');
+  }
+  if (entityName === 'Album') {
+    next.avg_rating = 0;
+    next.review_count = 0;
+  }
   return next;
 }

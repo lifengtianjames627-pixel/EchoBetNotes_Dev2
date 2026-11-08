@@ -7,6 +7,7 @@ import {
   canReadRecord,
   prepareEntityInput,
 } from './policies.js';
+import { applyCreateModeration, sanitizeEntityChanges } from './writeGuards.js';
 import { withApiErrors } from '../http/sendError.js';
 
 const decodeCursor = (cursor) => {
@@ -66,7 +67,10 @@ export async function entityRoutes(app) {
   app.post('/api/entities/:name', withApiErrors(async (request) => {
     const { name } = request.params;
     requireDefinition(name);
-    const input = prepareEntityInput(name, request.user, request.body || {});
+    const input = await applyCreateModeration(
+      name,
+      prepareEntityInput(name, request.user, request.body || {}),
+    );
     assertEntityOperation(name, 'create', request.user, null, input);
     return entity(name).create(input, request.user);
   }));
@@ -76,12 +80,8 @@ export async function entityRoutes(app) {
     requireDefinition(name);
     const current = await entity(name).find(id);
     if (!current) throw new HttpError(404, 'not_found', 'Record not found');
-    assertEntityOperation(name, 'update', request.user, current, request.body || {});
-    const changes = { ...(request.body || {}) };
-    if (name === 'User') {
-      delete changes.role;
-      delete changes.email;
-    }
+    const changes = await sanitizeEntityChanges(name, current, request.body || {});
+    assertEntityOperation(name, 'update', request.user, current, changes);
     return entity(name).update(id, changes);
   }));
 
@@ -98,6 +98,7 @@ export async function entityRoutes(app) {
   app.post('/api/entities/:name/aggregate', withApiErrors(async (request) => {
     const { name } = request.params;
     requireDefinition(name);
+    assertCollectionRead(name, request.user);
     const records = visibleRecords(name, request.user, await entity(name).list({ limit: 1000 }));
     const { groupBy, sum } = request.body || {};
     if (!groupBy) throw new HttpError(400, 'invalid_aggregate');

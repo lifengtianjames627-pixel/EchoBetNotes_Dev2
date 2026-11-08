@@ -12,12 +12,15 @@ const fieldExpression = (field) => {
   return `data->'${field}'`;
 };
 
-function compileFilter(filter, values) {
+function compileFilter(filter, values, depth = 0) {
+  if (depth > 3) throw new Error('Invalid filter');
   if (!filter || !Object.keys(filter).length) return 'TRUE';
   const clauses = [];
+  if (Object.keys(filter).length > 20) throw new Error('Invalid filter');
   for (const [field, expected] of Object.entries(filter)) {
     if (field === '$or' || field === '$and') {
-      const parts = Array.isArray(expected) ? expected.map((item) => `(${compileFilter(item, values)})`) : [];
+      if (!Array.isArray(expected) || expected.length > 10) throw new Error('Invalid filter');
+      const parts = expected.map((item) => `(${compileFilter(item, values, depth + 1)})`);
       clauses.push(parts.length ? parts.join(field === '$or' ? ' OR ' : ' AND ') : 'TRUE');
       continue;
     }
@@ -26,6 +29,7 @@ function compileFilter(filter, values) {
     if (expected && typeof expected === 'object' && !Array.isArray(expected)) {
       if ('$in' in expected || '$nin' in expected) {
         const list = expected.$in || expected.$nin || [];
+        if (!Array.isArray(list) || list.length > 100) throw new Error('Invalid filter');
         const comparisons = list.map((item) => {
           const scalarColumn = field === 'id' || field === 'created_by_id'
             || field === 'created_date' || field === 'updated_date';

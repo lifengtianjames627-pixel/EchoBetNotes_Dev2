@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { entity } from '../../entities/repository.js';
 import { bearer, invokeFunction, registerMember } from './helpers.js';
 
 let buildApp;
@@ -20,14 +21,29 @@ describe('review and vote policies', () => {
       headers: bearer(author.token),
       payload: {
         title: 'Pending thoughts',
-        body: 'Still waiting for moderation.',
+        content: 'Still waiting for moderation.',
         moderation_status: 'pending_review',
-        reviewer_email: author.user.email,
-        reviewer_name: 'Author',
+        reviewer_email: 'other@example.com',
+        reviewer_name: 'Someone else',
+        likes_count: 40,
+        reviewer_equipped_badges: ['not-a-badge'],
       },
     });
     expect(pending.statusCode).toBe(200);
+    expect(pending.json().reviewer_email).toBe(author.user.email);
+    expect(pending.json().likes_count).toBe(0);
+    expect(pending.json().reviewer_equipped_badges).toEqual([]);
+    expect(pending.json().moderation_status).toBe('approved');
     const pendingId = pending.json().id;
+
+    const moderator = await registerMember(app, 'moderator');
+    await entity('User').update(moderator.user.id, { role: 'admin' });
+    const hidden = await invokeFunction(app, moderator.token, 'editReview', {
+      action: 'moderate',
+      id: pendingId,
+      status: 'blocked',
+    });
+    expect(hidden.statusCode).toBe(200);
 
     const readerPendingList = await app.inject({
       method: 'POST',
@@ -43,14 +59,32 @@ describe('review and vote policies', () => {
       headers: bearer(author.token),
       payload: {
         title: 'Approved thoughts',
-        body: 'Ready for everyone.',
+        content: 'Ready for everyone.',
         moderation_status: 'approved',
-        reviewer_email: author.user.email,
+        reviewer_email: 'other@example.com',
         reviewer_name: 'Author',
       },
     });
     expect(approved.statusCode).toBe(200);
+    expect(approved.json().reviewer_email).toBe(author.user.email);
     const reviewId = approved.json().id;
+
+    const directEdit = await app.inject({
+      method: 'PATCH',
+      url: `/api/entities/Review/${reviewId}`,
+      headers: bearer(author.token),
+      payload: { likes_count: 99, moderation_status: 'approved', content: 'Bypassed' },
+    });
+    expect(directEdit.statusCode).toBe(403);
+    expect(directEdit.json().error).toBe('function_required');
+
+    const guestAggregate = await app.inject({
+      method: 'POST',
+      url: '/api/entities/ChatMessage/aggregate',
+      payload: { groupBy: 'sender_email' },
+    });
+    expect(guestAggregate.statusCode).toBe(401);
+    expect(guestAggregate.json().error).toBe('auth_required');
 
     const directVote = await app.inject({
       method: 'POST',

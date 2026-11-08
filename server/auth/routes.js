@@ -8,6 +8,7 @@ import {
   tokenFromRequest,
 } from './session.js';
 import { entity } from '../entities/repository.js';
+import { sanitizeEntityChanges } from '../entities/writeGuards.js';
 
 const cookieOptions = {
   path: '/',
@@ -55,10 +56,7 @@ export async function authRoutes(app) {
     if (!request.user) {
       return authError(request, reply, 401, 'auth_required', 'Authentication required');
     }
-    const blocked = new Set(['id', 'email', 'role', 'created_date', 'created_by_id']);
-    const changes = Object.fromEntries(
-      Object.entries(request.body || {}).filter(([key]) => !blocked.has(key)),
-    );
+    const changes = await sanitizeEntityChanges('User', request.user, request.body || {});
     return entity('User').update(request.user.id, changes);
   });
 
