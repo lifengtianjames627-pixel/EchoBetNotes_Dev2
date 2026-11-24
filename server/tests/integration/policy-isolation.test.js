@@ -1,10 +1,17 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import assert from 'node:assert/strict';
+import { after, before, describe, it } from 'node:test';
+import { buildApp } from '../../app.js';
 import { bearer, registerMember } from './helpers.js';
+import { createTestDatabase } from './setup.js';
 
-let buildApp;
+let testDb;
 
-beforeAll(async () => {
-  ({ buildApp } = await import('../../app.js'));
+before(async () => {
+  testDb = await createTestDatabase();
+});
+
+after(async () => {
+  await testDb.close();
 });
 
 describe('entity policy isolation', () => {
@@ -22,7 +29,7 @@ describe('entity policy isolation', () => {
         peer_name: 'Peer',
       },
     });
-    expect(created.statusCode).toBe(200);
+    assert.equal(created.statusCode, 200);
     const pinId = created.json().id;
 
     const ownerList = await app.inject({
@@ -31,7 +38,7 @@ describe('entity policy isolation', () => {
       headers: bearer(owner.token),
       payload: { filter: { owner_email: owner.user.email }, limit: 10 },
     });
-    expect(ownerList.json()).toHaveLength(1);
+    assert.equal(ownerList.json().length, 1);
 
     const otherList = await app.inject({
       method: 'POST',
@@ -39,16 +46,16 @@ describe('entity policy isolation', () => {
       headers: bearer(other.token),
       payload: { filter: { owner_email: owner.user.email }, limit: 10 },
     });
-    expect(otherList.json()).toHaveLength(0);
+    assert.equal(otherList.json().length, 0);
 
     const deleteAttempt = await app.inject({
       method: 'DELETE',
       url: `/api/entities/PinnedPeer/${pinId}`,
       headers: bearer(other.token),
     });
-    expect(deleteAttempt.statusCode).toBe(403);
-    expect(deleteAttempt.json().error).toBe('forbidden');
-    expect(deleteAttempt.json().requestId).toBeTruthy();
+    assert.equal(deleteAttempt.statusCode, 403);
+    assert.equal(deleteAttempt.json().error, 'forbidden');
+    assert.ok(deleteAttempt.json().requestId);
 
     const chatWrite = await app.inject({
       method: 'POST',
@@ -56,8 +63,8 @@ describe('entity policy isolation', () => {
       headers: bearer(owner.token),
       payload: { content: 'hello' },
     });
-    expect(chatWrite.statusCode).toBe(403);
-    expect(chatWrite.json().error).toBe('function_required');
+    assert.equal(chatWrite.statusCode, 403);
+    assert.equal(chatWrite.json().error, 'function_required');
 
     await app.close();
   });

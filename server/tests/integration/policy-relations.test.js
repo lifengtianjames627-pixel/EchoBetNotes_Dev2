@@ -1,10 +1,17 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import assert from 'node:assert/strict';
+import { after, before, describe, it } from 'node:test';
+import { buildApp } from '../../app.js';
 import { bearer, invokeFunction, registerMember } from './helpers.js';
+import { createTestDatabase } from './setup.js';
 
-let buildApp;
+let testDb;
 
-beforeAll(async () => {
-  ({ buildApp } = await import('../../app.js'));
+before(async () => {
+  testDb = await createTestDatabase();
+});
+
+after(async () => {
+  await testDb.close();
 });
 
 describe('subscription and friend-request policies', () => {
@@ -24,9 +31,9 @@ describe('subscription and friend-request policies', () => {
         subscriber_name: 'Follower',
       },
     });
-    expect(created.statusCode).toBe(200);
+    assert.equal(created.statusCode, 200);
     const subscriptionId = created.json().id;
-    expect(created.json().subscriber_email).toBe(follower.user.email);
+    assert.equal(created.json().subscriber_email, follower.user.email);
 
     const creatorView = await app.inject({
       method: 'POST',
@@ -34,14 +41,14 @@ describe('subscription and friend-request policies', () => {
       headers: bearer(creator.token),
       payload: { filter: { target_email: creator.user.email }, limit: 10 },
     });
-    expect(creatorView.json()).toHaveLength(0);
+    assert.equal(creatorView.json().length, 0);
 
     const deleteAttempt = await app.inject({
       method: 'DELETE',
       url: `/api/entities/Subscription/${subscriptionId}`,
       headers: bearer(creator.token),
     });
-    expect(deleteAttempt.statusCode).toBe(403);
+    assert.equal(deleteAttempt.statusCode, 403);
 
     await app.close();
   });
@@ -58,16 +65,16 @@ describe('subscription and friend-request policies', () => {
       headers: bearer(sender.token),
       payload: { from_email: sender.user.email, to_email: receiver.user.email },
     });
-    expect(directCreate.statusCode).toBe(403);
-    expect(directCreate.json().error).toBe('function_required');
-    expect(directCreate.json().requestId).toBeTruthy();
+    assert.equal(directCreate.statusCode, 403);
+    assert.equal(directCreate.json().error, 'function_required');
+    assert.ok(directCreate.json().requestId);
 
     const sent = await invokeFunction(app, sender.token, 'friendRequests', {
       action: 'send',
       target_email: receiver.user.email,
       message: 'Want to connect?',
     });
-    expect(sent.statusCode).toBe(200);
+    assert.equal(sent.statusCode, 200);
     const requestId = sent.json().request.id;
 
     const outsiderRespond = await invokeFunction(app, outsider.token, 'friendRequests', {
@@ -75,22 +82,22 @@ describe('subscription and friend-request policies', () => {
       id: requestId,
       status: 'accepted',
     });
-    expect(outsiderRespond.statusCode).toBe(403);
+    assert.equal(outsiderRespond.statusCode, 403);
 
     const senderRespond = await invokeFunction(app, sender.token, 'friendRequests', {
       action: 'respond',
       id: requestId,
       status: 'accepted',
     });
-    expect(senderRespond.statusCode).toBe(403);
+    assert.equal(senderRespond.statusCode, 403);
 
     const accepted = await invokeFunction(app, receiver.token, 'friendRequests', {
       action: 'respond',
       id: requestId,
       status: 'accepted',
     });
-    expect(accepted.statusCode).toBe(200);
-    expect(accepted.json().request.status).toBe('accepted');
+    assert.equal(accepted.statusCode, 200);
+    assert.equal(accepted.json().request.status, 'accepted');
 
     const outsiderRead = await app.inject({
       method: 'POST',
@@ -98,7 +105,7 @@ describe('subscription and friend-request policies', () => {
       headers: bearer(outsider.token),
       payload: { filter: { id: requestId }, limit: 5 },
     });
-    expect(outsiderRead.json()).toHaveLength(0);
+    assert.equal(outsiderRead.json().length, 0);
 
     await app.close();
   });

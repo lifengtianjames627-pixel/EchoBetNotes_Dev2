@@ -1,9 +1,16 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import assert from 'node:assert/strict';
+import { after, before, describe, it } from 'node:test';
+import { buildApp } from '../../app.js';
+import { createTestDatabase } from './setup.js';
 
-let buildApp;
+let testDb;
 
-beforeAll(async () => {
-  ({ buildApp } = await import('../../app.js'));
+before(async () => {
+  testDb = await createTestDatabase();
+});
+
+after(async () => {
+  await testDb.close();
 });
 
 describe('auth HTTP routes', () => {
@@ -19,34 +26,34 @@ describe('auth HTTP routes', () => {
         displayName: 'Listener',
       },
     });
-    expect(register.statusCode).toBe(200);
-    expect(register.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/i);
+    assert.equal(register.statusCode, 200);
+    assert.match(register.headers['x-request-id'], /^[0-9a-f-]{36}$/i);
     const registerBody = register.json();
-    expect(registerBody.user.email).toBe('listener@example.com');
-    expect(registerBody.access_token).toMatch(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+    assert.equal(registerBody.user.email, 'listener@example.com');
+    assert.match(registerBody.access_token, /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
 
     const me = await app.inject({
       method: 'GET',
       url: '/api/auth/me',
       headers: { authorization: `Bearer ${registerBody.access_token}` },
     });
-    expect(me.statusCode).toBe(200);
-    expect(me.json().display_name).toBe('Listener');
+    assert.equal(me.statusCode, 200);
+    assert.equal(me.json().display_name, 'Listener');
 
     const logout = await app.inject({
       method: 'POST',
       url: '/api/auth/logout',
       headers: { authorization: `Bearer ${registerBody.access_token}` },
     });
-    expect(logout.statusCode).toBe(200);
+    assert.equal(logout.statusCode, 200);
 
     const meAfterLogout = await app.inject({
       method: 'GET',
       url: '/api/auth/me',
       headers: { authorization: `Bearer ${registerBody.access_token}` },
     });
-    expect(meAfterLogout.statusCode).toBe(401);
-    expect(meAfterLogout.json().requestId).toBeTruthy();
+    assert.equal(meAfterLogout.statusCode, 401);
+    assert.ok(meAfterLogout.json().requestId);
 
     await app.close();
   });
@@ -59,17 +66,17 @@ describe('auth HTTP routes', () => {
       password: 'correct-horse-battery',
       displayName: 'Dup',
     };
-    expect((await app.inject({ method: 'POST', url: '/api/auth/register', payload })).statusCode).toBe(200);
-    expect((await app.inject({ method: 'POST', url: '/api/auth/register', payload })).statusCode).toBe(409);
+    assert.equal((await app.inject({ method: 'POST', url: '/api/auth/register', payload })).statusCode, 200);
+    assert.equal((await app.inject({ method: 'POST', url: '/api/auth/register', payload })).statusCode, 409);
 
     const login = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
       payload: { email: payload.email, password: 'wrong-password-value' },
     });
-    expect(login.statusCode).toBe(401);
-    expect(login.json().error).toBe('invalid_credentials');
-    expect(login.json().message).toBe('Invalid email or password');
+    assert.equal(login.statusCode, 401);
+    assert.equal(login.json().error, 'invalid_credentials');
+    assert.equal(login.json().message, 'Invalid email or password');
 
     await app.close();
   });

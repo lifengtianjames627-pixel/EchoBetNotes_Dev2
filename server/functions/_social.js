@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { HttpError } from '../entities/policies.js';
 import { buildChatMessage, lastSeenFor } from '../shared/chatPolicy.js';
-import { chatIdFor, normalizeEmail, onlineRecently, safeMemberName } from '../shared/identity.js';
+import { normalizeEmail, onlineRecently, safeMemberName } from '../shared/identity.js';
 import { readBounds } from '../shared/readBounds.js';
 import { records, requireAdmin, requireUser } from './_helpers.js';
 

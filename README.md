@@ -1,28 +1,44 @@
 # Echoes Between Notes
 
-A host-ready full-stack music community website built with React, Vite, Node.js, Fastify, PostgreSQL, and S3-compatible object storage.
+A self-hosted full-stack music community website built entirely on Node.js, Fastify, PostgreSQL, and S3-compatible object storage — with server-rendered warm paper HTML, static CSS, and lightweight browser JavaScript (no React, no Vite, no frontend build step).
 
 ## Repository structure
 
 ```text
-src/                         React website
-  api/                       Browser API client
-  features/                  Domain UI and query modules
-server/                      Dedicated Node.js backend
+public/
+  favicon.svg
+  manifest.json
+  styles/paper.css           Warm paper journal stylesheet
+  js/app.js                  Lightweight browser controller for /api/* actions
+server/
+  index.js                   Application entrypoint (migrate + listen)
+  app.js                     Fastify application wiring (API + web routes + static)
+  check.js                   Node syntax check across server/ and public/js/
   auth/                      Password hashing, JWT/cookie sessions, auth routes
   config/                    Validated runtime configuration
   db/                        PostgreSQL pool and versioned SQL migrations
   entities/
     definitions/             One policy definition per persisted entity
     repository.js            Generic PostgreSQL entity repository
-    policies.js              Record-level authorization rules
+    policies.js              Record- and collection-level authorization rules
+    writeGuards.js           Server-side moderation and write sanitization
     routes.js                Entity CRUD/filter/aggregate API
   functions/                 One workflow module per business operation
-  shared/                    Reusable identity, chat, review, and AI policies
+  http/                      Request IDs, structured logs, uniform error responses
+  shared/                    Genres, podcasts, badges, identity, chat, review, and AI helpers
   storage/                   Local and S3-compatible object storage
-  tests/                     Backend contract and policy tests
+  web/
+    html.js                  Auto-escaping HTML template tag and URL safety helpers
+    i18n.js                  6-language UI dictionary (en, zh, ja, ko, fr, ru)
+    layout.js                Warm paper journal page shell
+    routes.js                Server-rendered page router and auth/admin guards
+    pages/                   One module per domain (home, reviews, discover, genres, album, podcasts, profile, chat, soulmate, moderation, staticPages)
+  tests/
+    unit/                    Node built-in unit tests
+    integration/             PGlite HTTP, policy, and SSR integration tests
 deploy/
   docker-compose.yml         Website + PostgreSQL production stack
+  docker-compose.dev.yml     Local PostgreSQL for development
   nginx.conf                 Optional reverse-proxy configuration
 ```
 
@@ -36,34 +52,25 @@ deploy/
 
 ```bash
 npm ci
-cp .env.example .env.local
+cp .env.example .env
 docker compose -f deploy/docker-compose.dev.yml up -d
 npm run db:migrate
-npm run dev:full
+npm run dev
 ```
 
-The Vite website runs on `http://localhost:5173`; the API runs on `http://localhost:3000`. Leave `VITE_API_BASE_URL` empty to use the Vite `/api` proxy, or set `VITE_API_BASE_URL=http://localhost:3000` when calling the API directly.
-
-Authentication uses the dedicated backend under `server/auth/` (JWT bearer token plus `HttpOnly` session cookie). The login page stores the bearer token for cross-origin development; production same-origin deployments can rely on the cookie alone.
+The website and API run together on `http://localhost:3000`.
 
 ### Create the first administrator
 
-Set `BOOTSTRAP_ADMIN_EMAIL` before registering that email. The first matching account receives the `admin` role. Disable open registration in production with `ALLOW_REGISTRATION=false` after provisioning accounts or connect a separate invitation flow.
+Set `BOOTSTRAP_ADMIN_EMAIL` before registering that email. The first matching account receives the `admin` role. Disable open registration in production with `ALLOW_REGISTRATION=false` after provisioning accounts.
 
 ## Runtime environment
-
-Frontend build variables:
-
-```bash
-VITE_APP_ID=echoes-between-notes
-VITE_API_BASE_URL=
-VITE_LOGIN_URL=/login
-```
 
 Backend essentials:
 
 ```bash
 DATABASE_URL=postgres://echoes:password@localhost:5432/echoes
+DATABASE_SSL=false
 JWT_SECRET=<at-least-32-random-characters>
 PUBLIC_BASE_URL=https://music.example.com
 ALLOWED_ORIGINS=https://music.example.com
@@ -77,20 +84,18 @@ An optional OpenAI-compatible JSON endpoint can be configured with `LLM_API_URL`
 
 ## Commands
 
-- `npm run dev` — frontend development server
-- `npm run dev:server` — backend development server
-- `npm run dev:full` — run frontend and backend together
-- `npm run build` — build the frontend
-- `npm run build:server` — backend syntax validation
+- `npm run dev` — run the Node.js server with `--watch`
+- `npm run start` — migrate and run the production server
 - `npm run db:migrate` — apply pending PostgreSQL migrations
-- `npm run start` — migrate and run the production full-stack server
-- `npm test` — unit tests plus PGlite integration tests
-- `npm run test:unit` — policies, repository, HTTP helpers only
-- `npm run test:integration` — auth, observability, and policy isolation against PGlite
-- `npm run typecheck` — JavaScript/TypeScript checking
-- `npm run lint` — lint checks
+- `npm run check` — Node syntax validation across `server/` and `public/js/`
+- `npm run lint` — ESLint checks across `server/` and `public/js/`
+- `npm test` — unit tests and PGlite integration tests via `node --test`
+- `npm run test:unit` — fast unit tests only
+- `npm run test:integration` — HTTP, auth, policy, storage, and SSR tests against PGlite
 
 ## Docker deployment
+
+See `instruction.md` for the full host launch checklist.
 
 ```bash
 export POSTGRES_PASSWORD='use-a-secret-manager'
@@ -98,6 +103,7 @@ export JWT_SECRET='generate-at-least-32-random-characters'
 export PUBLIC_BASE_URL='https://music.example.com'
 export ALLOWED_ORIGINS='https://music.example.com'
 export COOKIE_SECURE='true'
+export DATABASE_SSL='false'
 export ALLOW_REGISTRATION='true'
 export BOOTSTRAP_ADMIN_EMAIL='admin@music.example.com'
 docker compose -f deploy/docker-compose.yml up --build -d
@@ -105,43 +111,12 @@ docker compose -f deploy/docker-compose.yml up --build -d
 
 The bundled Postgres container does not speak TLS. Compose sets `DATABASE_SSL=false` for that connection. Set `DATABASE_SSL=true` only when `DATABASE_URL` points at a database that requires TLS.
 
-Create the first account by registering `BOOTSTRAP_ADMIN_EMAIL` while `ALLOW_REGISTRATION=true`. That account receives the admin role. Then set `ALLOW_REGISTRATION=false` and recreate the website container. Set `COOKIE_SECURE=true` when the site is served over HTTPS. Leave it false only for a local HTTP boot.
-
-The production container:
-
-1. builds the React application;
-2. starts the dedicated Fastify backend;
-3. applies versioned database migrations;
-4. serves the SPA and API from one origin;
-5. persists PostgreSQL data and local uploads through named volumes.
-
-For production media, configure an S3-compatible private bucket instead of the local uploads volume. Place TLS at your ingress/load balancer or use the optional nginx reverse-proxy configuration. Back up the `postgres-data` volume, or the managed database, before going live.
-
-## HTTP API
-
-- `GET /health` and `GET /api/health`
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET|PATCH /api/auth/me`
-- `POST /api/auth/logout`
-- `/api/entities/:entityName` for policy-controlled CRUD
-- `/api/entities/:entityName/filter` for filtered queries
-- `/api/entities/:entityName/aggregate` for aggregates
-- `/api/functions/:name` for business workflows
-- `POST /api/uploads/public` for authenticated public uploads
-
-All sensitive entity mutations are denied on generic routes and must use their dedicated workflow. Private podcast audio and recruitment posters are returned only through expiring signed URLs.
-
 ## Verification
 
 Before deploying:
 
 ```bash
-npm run build
-npm run build:server
-npm run typecheck
+npm run check
 npm run lint
 npm test
 ```
-
-Also verify login, registration policy, administrator access, upload limits, signed media access, CORS, TLS cookies, and PostgreSQL backups in the target environment.
