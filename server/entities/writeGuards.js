@@ -1,7 +1,6 @@
 import { HttpError } from './policies.js';
 import { entity } from './repository.js';
 import { BADGE_IDS } from '../shared/badgeIds.js';
-import { safeMemberName } from '../shared/identity.js';
 import { moderateText } from '../shared/llm.js';
 
 const textOf = (input) => [input.title, input.content, input.body, input.band_style, input.band_background, input.band_history, input.band_story]

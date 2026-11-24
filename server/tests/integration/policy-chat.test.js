@@ -1,11 +1,18 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import assert from 'node:assert/strict';
+import { after, before, describe, it } from 'node:test';
+import { buildApp } from '../../app.js';
 import { chatIdFor } from '../../shared/identity.js';
 import { bearer, invokeFunction, registerMember } from './helpers.js';
+import { createTestDatabase } from './setup.js';
 
-let buildApp;
+let testDb;
 
-beforeAll(async () => {
-  ({ buildApp } = await import('../../app.js'));
+before(async () => {
+  testDb = await createTestDatabase();
+});
+
+after(async () => {
+  await testDb.close();
 });
 
 describe('chat and notification privacy', () => {
@@ -17,11 +24,11 @@ describe('chat and notification privacy', () => {
     const chatId = chatIdFor(alice.user.email, bob.user.email);
 
     const guest = await invokeFunction(app, '', 'sendChatMessage', { chat_id: chatId, content: 'hello' });
-    expect(guest.statusCode).toBe(401);
+    assert.equal(guest.statusCode, 401);
 
     const sent = await invokeFunction(app, alice.token, 'sendChatMessage', { chat_id: chatId, content: 'hello' });
-    expect(sent.statusCode).toBe(200);
-    expect(sent.json().message.sender_email).toBe(alice.user.email);
+    assert.equal(sent.statusCode, 200);
+    assert.equal(sent.json().message.sender_email, alice.user.email);
 
     const outsider = await app.inject({
       method: 'POST',
@@ -29,7 +36,7 @@ describe('chat and notification privacy', () => {
       headers: bearer(carol.token),
       payload: { filter: { chat_id: chatId }, limit: 10 },
     });
-    expect(outsider.json()).toEqual([]);
+    assert.deepEqual(outsider.json(), []);
 
     const insider = await app.inject({
       method: 'POST',
@@ -37,24 +44,24 @@ describe('chat and notification privacy', () => {
       headers: bearer(bob.token),
       payload: { filter: { chat_id: chatId }, limit: 10 },
     });
-    expect(insider.json()).toHaveLength(1);
+    assert.equal(insider.json().length, 1);
 
     const blocked = await invokeFunction(app, alice.token, 'sendChatMessage', {
       chat_id: chatId,
       content: 'mail me at person@example.com',
     });
-    expect(blocked.statusCode).toBe(400);
-    expect(blocked.json().error).toBe('contact_blocked');
+    assert.equal(blocked.statusCode, 400);
+    assert.equal(blocked.json().error, 'contact_blocked');
 
     const unread = await invokeFunction(app, bob.token, 'messageUnread', {});
-    expect(unread.json().unread).toBeGreaterThanOrEqual(1);
+    assert.ok(unread.json().unread >= 1);
     const carolUnread = await invokeFunction(app, carol.token, 'messageUnread', {});
-    expect(carolUnread.json().unread).toBe(0);
+    assert.equal(carolUnread.json().unread, 0);
 
     const directory = await invokeFunction(app, bob.token, 'chatDirectory', {});
-    expect(directory.json().conversations.some((item) => item.peer_email === alice.user.email)).toBe(true);
+    assert.equal(directory.json().conversations.some((item) => item.peer_email === alice.user.email), true);
     const carolDirectory = await invokeFunction(app, carol.token, 'chatDirectory', {});
-    expect(carolDirectory.json().conversations).toEqual([]);
+    assert.deepEqual(carolDirectory.json().conversations, []);
 
     await app.close();
   });
@@ -71,14 +78,14 @@ describe('chat and notification privacy', () => {
         chat_id: chatId,
         content: `note ${index}`,
       });
-      expect(sent.statusCode).toBe(200);
+      assert.equal(sent.statusCode, 200);
     }
     const limited = await invokeFunction(app, alice.token, 'sendChatMessage', {
       chat_id: chatId,
       content: 'one more',
     });
-    expect(limited.statusCode).toBe(403);
-    expect(limited.json().error).toBe('message_limit');
+    assert.equal(limited.statusCode, 403);
+    assert.equal(limited.json().error, 'message_limit');
 
     const created = await invokeFunction(app, alice.token, 'notifications', {
       action: 'create',
@@ -86,25 +93,25 @@ describe('chat and notification privacy', () => {
       type: 'follow',
       title: 'Alice followed you',
     });
-    expect(created.statusCode).toBe(200);
+    assert.equal(created.statusCode, 200);
     const notificationId = created.json().id;
 
     const bobList = await invokeFunction(app, bob.token, 'notifications', { action: 'list' });
-    expect(bobList.json().items.some((item) => item.id === notificationId)).toBe(true);
+    assert.equal(bobList.json().items.some((item) => item.id === notificationId), true);
     const aliceList = await invokeFunction(app, alice.token, 'notifications', { action: 'list' });
-    expect(aliceList.json().items.some((item) => item.id === notificationId)).toBe(false);
+    assert.equal(aliceList.json().items.some((item) => item.id === notificationId), false);
 
     const hijack = await invokeFunction(app, carol.token, 'notifications', {
       action: 'markRead',
       id: notificationId,
     });
-    expect(hijack.statusCode).toBe(404);
+    assert.equal(hijack.statusCode, 404);
 
     const marked = await invokeFunction(app, bob.token, 'notifications', {
       action: 'markRead',
       id: notificationId,
     });
-    expect(marked.json()).toMatchObject({ ok: true });
+    assert.equal(marked.json().ok, true);
 
     const system = await invokeFunction(app, alice.token, 'notifications', {
       action: 'create',
@@ -112,7 +119,7 @@ describe('chat and notification privacy', () => {
       type: 'system',
       title: 'System',
     });
-    expect(system.statusCode).toBe(403);
+    assert.equal(system.statusCode, 403);
 
     await app.close();
   });

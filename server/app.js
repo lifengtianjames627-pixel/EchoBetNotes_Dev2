@@ -1,4 +1,3 @@
-import { access, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import cookie from '@fastify/cookie';
 import cors from '@fastify/cors';
@@ -16,6 +15,7 @@ import { storageRoutes } from './storage/routes.js';
 import { actorRoleFromRequest, logApiRequest } from './http/log.js';
 import { readOrCreateRequestId } from './http/requestId.js';
 import { sendApiError } from './http/sendError.js';
+import { renderNotFoundHtml, webRoutes } from './web/routes.js';
 
 export async function buildApp(options = {}) {
   const app = Fastify({
@@ -94,17 +94,13 @@ export async function buildApp(options = {}) {
   await functionRoutes(app);
   await storageRoutes(app);
 
-  const dist = path.resolve('dist');
-  let hasDist = false;
-  try {
-    await access(path.join(dist, 'index.html'));
-    hasDist = true;
-  } catch {
-    hasDist = false;
-  }
-  if (hasDist) {
-    await app.register(staticFiles, { root: dist, wildcard: false });
-  }
+  await app.register(staticFiles, {
+    root: path.resolve('public'),
+    prefix: '/',
+    wildcard: false,
+  });
+
+  await webRoutes(app);
 
   const apiErrorBody = (request, code, message) => ({
     error: code,
@@ -117,9 +113,8 @@ export async function buildApp(options = {}) {
       reply.header('x-error-code', 'not_found');
       return reply.code(404).send(apiErrorBody(request, 'not_found', 'Route not found'));
     }
-    if (hasDist && request.method === 'GET') {
-      reply.type('text/html');
-      return reply.send(await readFile(path.join(dist, 'index.html')));
+    if (request.method === 'GET') {
+      return reply.code(404).type('text/html; charset=utf-8').send(renderNotFoundHtml(request));
     }
     return reply.code(404).send({ error: 'not_found' });
   });

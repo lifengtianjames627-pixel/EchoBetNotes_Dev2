@@ -1,9 +1,16 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import assert from 'node:assert/strict';
+import { after, before, describe, it } from 'node:test';
+import { buildApp } from '../../app.js';
+import { createTestDatabase } from './setup.js';
 
-let buildApp;
+let testDb;
 
-beforeAll(async () => {
-  ({ buildApp } = await import('../../app.js'));
+before(async () => {
+  testDb = await createTestDatabase();
+});
+
+after(async () => {
+  await testDb.close();
 });
 
 describe('HTTP observability', () => {
@@ -17,12 +24,12 @@ describe('HTTP observability', () => {
       headers: { 'x-request-id': incoming },
     });
 
-    expect(health.statusCode).toBe(200);
-    expect(health.headers['x-request-id']).toBe(incoming);
-    expect(health.headers['cache-control']).toBe('no-store');
-    expect(health.headers['x-content-type-options']).toBe('nosniff');
-    expect(health.headers['x-frame-options']).toBe('DENY');
-    expect(health.json()).toMatchObject({ status: 'ok', checks: { database: 'ok' } });
+    assert.equal(health.statusCode, 200);
+    assert.equal(health.headers['x-request-id'], incoming);
+    assert.equal(health.headers['cache-control'], 'no-store');
+    assert.equal(health.headers['x-content-type-options'], 'nosniff');
+    assert.equal(health.headers['x-frame-options'], 'DENY');
+    assert.deepEqual(health.json(), { status: 'ok', checks: { database: 'ok' } });
 
     await app.close();
   });
@@ -33,12 +40,10 @@ describe('HTTP observability', () => {
       method: 'GET',
       url: '/api/does-not-exist',
     });
-    expect(response.statusCode).toBe(404);
-    expect(response.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/i);
-    expect(response.json()).toMatchObject({
-      error: 'not_found',
-      requestId: response.headers['x-request-id'],
-    });
+    assert.equal(response.statusCode, 404);
+    assert.match(response.headers['x-request-id'], /^[0-9a-f-]{36}$/i);
+    assert.equal(response.json().error, 'not_found');
+    assert.equal(response.json().requestId, response.headers['x-request-id']);
     await app.close();
   });
 });

@@ -11,7 +11,12 @@ async function files(directory) {
   return nested.flat().filter((file) => file.endsWith('.js'));
 }
 
-for (const file of await files(path.resolve('server'))) {
+const targets = [
+  ...(await files(path.resolve('server'))),
+  ...(await files(path.resolve('public/js'))),
+];
+
+for (const file of targets) {
   const result = spawnSync(process.execPath, ['--check', file], { stdio: 'inherit' });
   if (result.status !== 0) process.exit(result.status || 1);
 }

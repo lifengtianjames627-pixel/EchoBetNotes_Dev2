@@ -1,8 +1,8 @@
 # Launch and host Echoes Between Notes
 
-These are the actions you take on the machine that will serve the site. The container builds the website, applies database migrations, and serves the site and API on one origin. You do not run `npm run build` or `npm run db:migrate` for this path.
+These are the actions you take on the machine that will serve the site. The Node.js container applies database migrations and serves the server-rendered website, static assets, and API on one origin. You do not run any frontend bundler or `npm run db:migrate` manually for this path.
 
-Use the repository after the deploy-ready changes are included (pull request #9 until that pull request is on `main`).
+Use the latest `main` branch after the Node.js infrastructure pull request is merged.
 
 ## 1. Prepare the host
 
